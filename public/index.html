@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="德州扑克 - 多人在线扑克游戏">
+  <title>德州扑克 | Texas Hold'em Poker Online</title>
+  <link rel="stylesheet" href="css/index.css">
+  <link rel="stylesheet" href="css/table.css">
+  <link rel="stylesheet" href="css/cards.css">
+  <link rel="stylesheet" href="css/lobby.css">
+</head>
+<body>
+
+  <!-- Connection Status -->
+  <div class="connection-status">
+    <button class="sound-toggle" id="sound-toggle" title="音效开关">🔊</button>
+    <span class="status-dot"></span>
+    <span class="status-label">连接中...</span>
+  </div>
+
+  <!-- ===== Lobby Screen ===== -->
+  <div id="lobby-screen">
+    <div class="lobby-content">
+      <h1 class="lobby-logo">TEXAS HOLD'EM</h1>
+      <p class="lobby-subtitle">德 州 扑 克 · 在 线 对 战</p>
+
+      <div class="name-section">
+        <input type="text" class="name-input" id="player-name-input" placeholder="输入你的昵称" maxlength="12">
+      </div>
+
+      <div class="lobby-actions">
+        <button class="lobby-btn primary" id="btn-quick-match">
+          <span class="btn-icon">⚡</span> 快速匹配
+        </button>
+
+        <button class="lobby-btn tertiary" id="btn-create-room">
+          <span class="btn-icon">🎯</span> 创建房间
+        </button>
+
+        <div class="lobby-divider">或加入已有房间</div>
+
+        <div class="join-row">
+          <input type="text" class="room-code-input" id="room-code-input" placeholder="房间号" maxlength="6">
+          <button class="join-btn" id="btn-join-room">加入</button>
+        </div>
+      </div>
+
+      <div class="lobby-suits">
+        <span class="lobby-suit">♠</span>
+        <span class="lobby-suit">♥</span>
+        <span class="lobby-suit">♦</span>
+        <span class="lobby-suit">♣</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== Waiting Room ===== -->
+  <div id="waiting-screen" class="hidden">
+    <div class="waiting-content">
+      <h2 class="waiting-title">等待玩家加入</h2>
+      <div class="room-id-display" id="display-room-id">------</div>
+      <p class="room-id-hint">分享房间号给朋友加入</p>
+
+      <ul class="player-list" id="player-list"></ul>
+
+      <p class="waiting-status">等待更多玩家...</p>
+
+      <button class="start-game-btn" id="btn-start-game">开始游戏 (AI 补位)</button>
+    </div>
+  </div>
+
+  <!-- ===== Game Screen ===== -->
+  <div id="game-screen" class="hidden">
+
+    <!-- Game Info Bar -->
+    <div class="game-info-bar">
+      <div class="info-item">
+        <span class="label">房间</span>
+        <span class="value" id="info-room">-</span>
+      </div>
+      <div class="info-item">
+        <span class="label">轮次</span>
+        <span class="value" id="info-round">#1</span>
+      </div>
+      <div class="info-item">
+        <span class="label">盲注</span>
+        <span class="value" id="info-blinds">$50/$100</span>
+      </div>
+    </div>
+
+    <!-- Poker Table -->
+    <div class="poker-table-container">
+      <div class="poker-table"></div>
+
+      <div class="pot-display">
+        <span class="pot-amount" id="pot-amount">底池: $0</span>
+      </div>
+
+      <div class="community-cards" id="community-cards"></div>
+
+      <div class="player-seat" data-position="0">
+        <div class="player-hand"></div>
+        <div class="player-info">
+          <div class="player-name">-</div>
+          <div class="player-chips">$0</div>
+        </div>
+      </div>
+      <div class="player-seat" data-position="1">
+        <div class="player-hand"></div>
+        <div class="player-info">
+          <div class="player-name">-</div>
+          <div class="player-chips">$0</div>
+        </div>
+      </div>
+      <div class="player-seat" data-position="2">
+        <div class="player-hand"></div>
+        <div class="player-info">
+          <div class="player-name">-</div>
+          <div class="player-chips">$0</div>
+        </div>
+      </div>
+      <div class="player-seat" data-position="3">
+        <div class="player-hand"></div>
+        <div class="player-info">
+          <div class="player-name">-</div>
+          <div class="player-chips">$0</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Controls -->
+    <div class="controls-panel" id="controls-panel" style="opacity:0.4; pointer-events:none;">
+      <button class="btn btn-fold" id="btn-fold">FOLD</button>
+      <button class="btn btn-check" id="btn-check">CHECK</button>
+      <button class="btn btn-call hidden" id="btn-call">CALL</button>
+      <div class="raise-control">
+        <button class="btn btn-raise" id="btn-raise">RAISE</button>
+        <input type="number" class="raise-input" id="raise-input" value="100" min="100">
+        <button class="btn" id="raise-half-pot" style="font-size:0.7rem;padding:6px 8px;background:var(--bg-tertiary);border-radius:var(--radius-sm);">½池</button>
+        <button class="btn" id="raise-pot" style="font-size:0.7rem;padding:6px 8px;background:var(--bg-tertiary);border-radius:var(--radius-sm);">底池</button>
+        <button class="btn" id="raise-2x" style="font-size:0.7rem;padding:6px 8px;background:var(--bg-tertiary);border-radius:var(--radius-sm);">2x</button>
+      </div>
+      <button class="btn btn-allin" id="btn-allin">ALL IN</button>
+    </div>
+
+    <div class="game-log" id="game-log"></div>
+
+    <div class="message-overlay hidden" id="message-overlay">
+      <div class="message-text" id="message-text"></div>
+    </div>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="js/sound.js"></script>
+  <script src="js/network.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="德州扑克 - 在线扑克游戏，与AI对手对战">
+  <title>德州扑克 | Texas Hold'em Poker</title>
+  <link rel="stylesheet" href="css/index.css">
+  <link rel="stylesheet" href="css/table.css">
+  <link rel="stylesheet" href="css/cards.css">
+</head>
+<body>
+
+  <!-- ===== Start Screen ===== -->
+  <div id="start-screen">
+    <div class="start-content">
+      <h1 class="game-logo">TEXAS HOLD'EM</h1>
+      <p class="game-subtitle">德 州 扑 克</p>
+      <button class="start-btn" id="start-btn">开始游戏</button>
+      <div class="start-decorations">
+        <span class="start-suit">♠</span>
+        <span class="start-suit">♥</span>
+        <span class="start-suit">♦</span>
+        <span class="start-suit">♣</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== Game Screen ===== -->
+  <div id="game-screen" class="hidden">
+
+    <!-- Game Info Bar -->
+    <div class="game-info-bar">
+      <div class="info-item">
+        <span class="label">轮次</span>
+        <span class="value" id="info-round">#1</span>
+      </div>
+      <div class="info-item">
+        <span class="label">盲注</span>
+        <span class="value" id="info-blinds">$50/$100</span>
+      </div>
+    </div>
+
+    <!-- Poker Table -->
+    <div class="poker-table-container">
+      <div class="poker-table"></div>
+
+      <!-- Pot -->
+      <div class="pot-display">
+        <span class="pot-amount" id="pot-amount">底池: $0</span>
+      </div>
+
+      <!-- Community Cards -->
+      <div class="community-cards" id="community-cards"></div>
+
+      <!-- Player Seats -->
+      <!-- Seat 0: Human (bottom) -->
+      <div class="player-seat" data-position="0">
+        <div class="player-hand"></div>
+        <div class="player-info">
+          <div class="player-name">你</div>
+          <div class="player-chips">$10,000</div>
+        </div>
+      </div>
+
+      <!-- Seat 1: AI (left) -->
+      <div class="player-seat" data-position="1">
+        <div class="player-hand"></div>
+        <div class="player-info">
+          <div class="player-name">Alice</div>
+          <div class="player-chips">$10,000</div>
+        </div>
+      </div>
+
+      <!-- Seat 2: AI (top) -->
+      <div class="player-seat" data-position="2">
+        <div class="player-hand"></div>
+        <div class="player-info">
+          <div class="player-name">Bob</div>
+          <div class="player-chips">$10,000</div>
+        </div>
+      </div>
+
+      <!-- Seat 3: AI (right) -->
+      <div class="player-seat" data-position="3">
+        <div class="player-hand"></div>
+        <div class="player-info">
+          <div class="player-name">Charlie</div>
+          <div class="player-chips">$10,000</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Controls Panel -->
+    <div class="controls-panel" id="controls-panel" style="opacity:0.4; pointer-events:none;">
+      <button class="btn btn-fold" id="btn-fold">FOLD</button>
+      <button class="btn btn-check" id="btn-check">CHECK</button>
+      <button class="btn btn-call hidden" id="btn-call">CALL</button>
+      <div class="raise-control">
+        <button class="btn btn-raise" id="btn-raise">RAISE</button>
+        <input type="number" class="raise-input" id="raise-input" value="100" min="100">
+        <button class="btn" id="raise-half-pot" style="font-size:0.7rem; padding:6px 8px; background:var(--bg-tertiary); border-radius:var(--radius-sm);">½底池</button>
+        <button class="btn" id="raise-pot" style="font-size:0.7rem; padding:6px 8px; background:var(--bg-tertiary); border-radius:var(--radius-sm);">底池</button>
+        <button class="btn" id="raise-2x" style="font-size:0.7rem; padding:6px 8px; background:var(--bg-tertiary); border-radius:var(--radius-sm);">2x</button>
+      </div>
+      <button class="btn btn-allin" id="btn-allin">ALL IN</button>
+    </div>
+
+    <!-- Game Log -->
+    <div class="game-log" id="game-log"></div>
+
+    <!-- Message Overlay -->
+    <div class="message-overlay hidden" id="message-overlay">
+      <div class="message-text" id="message-text"></div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="js/deck.js"></script>
+  <script src="js/hand.js"></script>
+  <script src="js/ai.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/game.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>

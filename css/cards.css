@@ -1,0 +1,134 @@
+/* ---- Playing Card Styles ---- */
+.card {
+  width: 60px;
+  height: 84px;
+  border-radius: 6px;
+  position: relative;
+  font-family: var(--font-mono);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  flex-shrink: 0;
+}
+
+.card.face-up {
+  background: var(--card-bg);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.4), inset 0 0 0 1px rgba(0,0,0,0.08);
+}
+
+.card.face-down {
+  background: linear-gradient(135deg, #1a3a6e, #244e8a);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+}
+
+.card.face-down::before {
+  content: '';
+  position: absolute;
+  inset: 4px;
+  border-radius: 3px;
+  border: 1.5px solid rgba(255,255,255,0.15);
+  background: repeating-linear-gradient(
+    45deg,
+    transparent,
+    transparent 3px,
+    rgba(255,255,255,0.03) 3px,
+    rgba(255,255,255,0.03) 6px
+  );
+}
+
+.card.face-down::after {
+  content: '♠';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 1.2rem;
+  color: rgba(255,255,255,0.15);
+}
+
+/* Card content */
+.card-rank {
+  position: absolute;
+  font-weight: 700;
+  font-size: 0.85rem;
+  line-height: 1;
+}
+
+.card-rank.top {
+  top: 4px;
+  left: 5px;
+}
+
+.card-rank.bottom {
+  bottom: 4px;
+  right: 5px;
+  transform: rotate(180deg);
+}
+
+.card-suit-small {
+  position: absolute;
+  font-size: 0.65rem;
+  line-height: 1;
+}
+
+.card-suit-small.top {
+  top: 16px;
+  left: 6px;
+}
+
+.card-suit-small.bottom {
+  bottom: 16px;
+  right: 6px;
+  transform: rotate(180deg);
+}
+
+.card-suit-center {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 1.8rem;
+}
+
+/* Card colors */
+.card.red .card-rank,
+.card.red .card-suit-small,
+.card.red .card-suit-center { color: #d32f2f; }
+
+.card.black .card-rank,
+.card.black .card-suit-small,
+.card.black .card-suit-center { color: #1a1a2e; }
+
+/* Small cards for player hands */
+.card.small {
+  width: 44px;
+  height: 62px;
+}
+
+.card.small .card-rank { font-size: 0.7rem; }
+.card.small .card-rank.top { top: 3px; left: 4px; }
+.card.small .card-rank.bottom { bottom: 3px; right: 4px; }
+.card.small .card-suit-small { font-size: 0.55rem; }
+.card.small .card-suit-small.top { top: 14px; left: 5px; }
+.card.small .card-suit-small.bottom { bottom: 14px; right: 5px; }
+.card.small .card-suit-center { font-size: 1.3rem; }
+
+.card.small.face-down::after { font-size: 0.9rem; }
+
+/* Card animations */
+.card.dealing {
+  animation: dealCard 0.4s ease forwards;
+}
+
+.card.highlight {
+  box-shadow: 0 0 12px rgba(46,204,113,0.6), 0 0 0 2px var(--success);
+  transform: translateY(-4px);
+}
+
+/* Community card spacing */
+.community-cards .card {
+  animation: dealCard 0.5s ease backwards;
+}
+.community-cards .card:nth-child(1) { animation-delay: 0s; }
+.community-cards .card:nth-child(2) { animation-delay: 0.1s; }
+.community-cards .card:nth-child(3) { animation-delay: 0.2s; }
+.community-cards .card:nth-child(4) { animation-delay: 0.3s; }
+.community-cards .card:nth-child(5) { animation-delay: 0.4s; }
