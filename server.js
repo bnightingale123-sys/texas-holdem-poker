@@ -18,6 +18,9 @@ const io = new Server(server, {
 // Serve static files from 'public' directory
 app.use(express.static(path.join(__dirname, 'public')));
 
+// Serve Speed Insights from node_modules
+app.use('/@vercel/speed-insights', express.static(path.join(__dirname, 'node_modules/@vercel/speed-insights/dist')));
+
 const roomManager = new RoomManager(io);
 
 io.on('connection', (socket) => {
