@@ -407,7 +407,15 @@ class Game {
     // Check game over
     const alivePlayers = this.players.filter(p => p.chips > 0);
     if (this.players[0].chips <= 0 || alivePlayers.length <= 1) {
-      await UI.showGameOver(this.players[0].chips);
+      const playerChips = this.players[0].chips;
+      await UI.showGameOver(playerChips);
+      // When player has no chips, wait for manual restart from start screen
+      if (playerChips <= 0) {
+        document.getElementById('game-screen').classList.add('hidden');
+        document.getElementById('start-screen').classList.remove('hidden');
+        document.getElementById('start-btn').textContent = '重新开始';
+        return;
+      }
       this.init();
       this.startRound();
       return;

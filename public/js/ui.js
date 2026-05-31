@@ -195,14 +195,29 @@ const UI = {
       const overlay = document.createElement('div');
       overlay.className = 'game-over-overlay';
       const won = myChips > 0;
+
+      // Show credit status
+      const balance = Credits.getBalance();
+      const isVIP = Credits.isVIP;
+      let creditStatus = '';
+      if (!won) {
+        if (isVIP) {
+          creditStatus = '<p class="credit-status vip">👑 VIP 积分无限 · Unlimited credits</p>';
+        } else if (balance >= Credits.COST_PER_GAME) {
+          creditStatus = `<p class="credit-status sufficient">💰 积分余额: ${balance.toLocaleString()} (可开始新游戏)</p>`;
+        } else {
+          creditStatus = `<p class="credit-status insufficient">⚠️ 积分不足: ${balance.toLocaleString()} / 需要 ${Credits.COST_PER_GAME.toLocaleString()}</p>`;
+        }
+      }
+
       overlay.innerHTML = `
         <h1>${won ? '🎉 恭喜! Congratulations!' : '💔 游戏结束 Game Over'}</h1>
         <p>${won ? `你赢得了 You won <strong>$${myChips.toLocaleString()}</strong>` : '你的筹码已用完 You ran out of chips'}</p>
+        ${creditStatus}
         <button class="restart-btn" id="restart-btn">重新开始 Restart</button>`;
       document.body.appendChild(overlay);
       document.getElementById('restart-btn').addEventListener('click', () => {
         overlay.remove();
-        Network.requestNewGame();
         resolve();
       });
     });
@@ -242,12 +257,7 @@ const UI = {
     // 1. Prevent context menu on long-press (interferes with game buttons)
     document.addEventListener('contextmenu', e => e.preventDefault());
 
-    // 2. Prevent text selection on double-tap for all buttons
-    document.querySelectorAll('button').forEach(btn => {
-      btn.addEventListener('touchstart', e => e.preventDefault(), { passive: false });
-    });
-
-    // 3. Inject floating log toggle button (only shows on ≤480px via CSS)
+    // 2. Inject floating log toggle button (only shows on ≤480px via CSS)
     const logToggle = document.createElement('button');
     logToggle.id = 'mobile-log-toggle';
     logToggle.innerHTML = '📋';

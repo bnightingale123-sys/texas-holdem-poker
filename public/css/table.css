@@ -531,6 +531,30 @@
   box-shadow: 0 4px 15px var(--gold-glow);
 }
 
+/* Credit status on game over */
+.game-over-overlay .credit-status {
+  font-size: 0.95rem;
+  margin-bottom: 20px;
+  padding: 8px 16px;
+  border-radius: var(--radius-md);
+  display: inline-block;
+}
+.game-over-overlay .credit-status.vip {
+  color: #FFD700;
+  background: rgba(255,215,0,0.08);
+  border: 1px solid rgba(255,215,0,0.2);
+}
+.game-over-overlay .credit-status.sufficient {
+  color: var(--success);
+  background: rgba(46,204,113,0.08);
+  border: 1px solid rgba(46,204,113,0.2);
+}
+.game-over-overlay .credit-status.insufficient {
+  color: var(--danger);
+  background: rgba(231,76,60,0.08);
+  border: 1px solid rgba(231,76,60,0.2);
+}
+
 /* ============================================
    MOBILE RESPONSIVE — TABLE & GAME UI
    ============================================ */

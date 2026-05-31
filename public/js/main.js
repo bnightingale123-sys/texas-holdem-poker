@@ -269,7 +269,24 @@ const App = {
     const myPlayer = this.myIndex >= 0 ? data.players[this.myIndex] : null;
     const myChips = myPlayer ? myPlayer.chips : 0;
     if (myChips > 0) { Sound.win(); } else { Sound.lose(); }
-    UI.showGameOver(myChips);
+    UI.showGameOver(myChips).then(() => {
+      // Only deduct credits if player lost all chips
+      if (myChips <= 0) {
+        if (Credits.canAffordGame()) {
+          if (!Credits.spendForGame()) {
+            UI.showError('积分扣除失败 Deduction failed');
+            return;
+          }
+          Network.requestNewGame();
+        } else {
+          UI.showError('积分不足！请领取每日积分或充值 · Insufficient credits! Claim daily bonus or top up.');
+          setTimeout(() => Credits.openModal(), 600);
+        }
+      } else {
+        // Player still has chips — free restart
+        Network.requestNewGame();
+      }
+    });
   }
 };
 

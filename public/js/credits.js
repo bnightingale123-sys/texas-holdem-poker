@@ -9,6 +9,7 @@ const Credits = {
   isVIP: false,
   vipExpiry: null,
   DAILY_FREE: 10000,
+  COST_PER_GAME: 10000,
   VIP_PRICE_ETH: 0.1,
 
   // ETH to Credits exchange rates
@@ -64,6 +65,20 @@ const Credits = {
   hasEnoughCredits(amount) {
     if (this.isVIP) return true;
     return this.balance >= amount;
+  },
+
+  canAffordGame() {
+    if (this.isVIP) return true;
+    return this.balance >= this.COST_PER_GAME;
+  },
+
+  spendForGame() {
+    if (this.isVIP) return true;
+    if (this.balance < this.COST_PER_GAME) return false;
+    this.balance -= this.COST_PER_GAME;
+    this.saveBalance();
+    this.updateDisplay();
+    return true;
   },
 
   // ---- Daily free claim logic ----
