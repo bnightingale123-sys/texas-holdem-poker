@@ -31,6 +31,8 @@ class Game {
   }
 
   init() {
+    this.needsRecharge = false;
+    localStorage.removeItem('needsRecharge');
     // Player 0 = human, 1-3 = AI
     this.players = [
       { name: '你', chips: 10000, holeCards: [], bet: 0, totalBet: 0, folded: false, isHuman: true, isDealer: false, isActive: false, allIn: false, ai: null },
@@ -410,7 +412,9 @@ class Game {
       const playerChips = this.players[0].chips;
 
       if (playerChips <= 0) {
-        // Player out of chips → show recharge page
+        // Player out of chips → flag and show recharge page
+        this.needsRecharge = true;
+        localStorage.setItem('needsRecharge', 'true');
         const rechargeAmount = await UI.showRechargeModal();
 
         if (rechargeAmount > 0) {

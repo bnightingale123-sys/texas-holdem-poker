@@ -11,7 +11,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
 function setupEventListeners() {
   // Start button
-  document.getElementById('start-btn').addEventListener('click', () => {
+  document.getElementById('start-btn').addEventListener('click', async () => {
+    // If player needs recharge, force recharge instead of starting
+    if (game.needsRecharge || localStorage.getItem('needsRecharge') === 'true') {
+      const amount = await UI.showRechargeModal();
+      if (amount > 0) {
+        game.init();
+        game.players[0].chips = amount;
+        document.getElementById('start-screen').classList.add('hidden');
+        document.getElementById('game-screen').classList.remove('hidden');
+        await UI.showMessage(`充值成功！获得 $${amount.toLocaleString()} 筹码`, 2500);
+        game.startRound();
+      }
+      return;
+    }
     document.getElementById('start-screen').classList.add('hidden');
     document.getElementById('game-screen').classList.remove('hidden');
     game.init();
