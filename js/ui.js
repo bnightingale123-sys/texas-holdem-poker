@@ -248,12 +248,111 @@ const UI = {
       overlay.innerHTML = `
         <h1>${won ? '🎉 恭喜你!' : '💔 游戏结束'}</h1>
         <p>${won ? `你赢得了 $${playerChips.toLocaleString()}` : '你的筹码已用完'}</p>
-        <button class="restart-btn" id="restart-btn">重新开始</button>
+        <button class="restart-btn" id="restart-btn">${won ? '重新开始' : '返回'}</button>
       `;
       document.body.appendChild(overlay);
       document.getElementById('restart-btn').addEventListener('click', () => {
         overlay.remove();
         resolve();
+      });
+    });
+  },
+
+  // Show recharge modal (ETH payment)
+  showRechargeModal() {
+    return new Promise(resolve => {
+      const overlay = document.createElement('div');
+      overlay.className = 'recharge-overlay';
+
+      const packages = [
+        { chips: 10000, eth: '0.01', label: '入门' },
+        { chips: 50000, eth: '0.05', label: '热门' },
+        { chips: 100000, eth: '0.10', label: '推荐' },
+        { chips: 500000, eth: '0.50', label: '至尊' },
+      ];
+
+      overlay.innerHTML = `
+        <div class="recharge-modal">
+          <div class="recharge-header">
+            <div class="recharge-icon">⟠</div>
+            <h2>筹码不足</h2>
+            <p>你的筹码已用完，请选择充值套餐继续游戏</p>
+          </div>
+          <div class="recharge-packages">
+            ${packages.map((pkg, i) => `
+              <div class="recharge-package" data-index="${i}">
+                <span class="pkg-badge">${pkg.label}</span>
+                <div class="pkg-chips">${pkg.chips.toLocaleString()}</div>
+                <div class="pkg-chips-label">筹码</div>
+                <div class="pkg-price">${pkg.eth} ETH</div>
+              </div>
+            `).join('')}
+          </div>
+          <div class="recharge-payment" id="recharge-payment" style="display:none;">
+            <div class="payment-header">支付确认</div>
+            <div class="payment-info">
+              <p style="margin-bottom:12px;">请向以下地址转账 ETH：</p>
+              <div class="eth-address" id="eth-address">0x742d35Cc6634C0532925a3b844Bc9e7595f2bD18</div>
+              <button class="btn-copy-addr" id="btn-copy-addr">复制地址</button>
+              <p class="payment-amount" id="payment-amount"></p>
+              <p class="payment-hint">转账后点击下方按钮确认，到账后自动发放筹码</p>
+              <button class="btn-pay" id="btn-pay">我已支付</button>
+            </div>
+          </div>
+        </div>
+      `;
+
+      document.body.appendChild(overlay);
+
+      let selectedChips = 0;
+
+      // Package selection
+      overlay.querySelectorAll('.recharge-package').forEach(el => {
+        el.addEventListener('click', () => {
+          const idx = parseInt(el.dataset.index);
+          const pkg = packages[idx];
+          selectedChips = pkg.chips;
+
+          // Highlight selected
+          overlay.querySelectorAll('.recharge-package').forEach(p => p.classList.remove('selected'));
+          el.classList.add('selected');
+
+          // Show payment step (with short delay for visual feedback)
+          setTimeout(() => {
+            overlay.querySelector('.recharge-packages').style.display = 'none';
+            const paymentEl = overlay.querySelector('#recharge-payment');
+            paymentEl.style.display = 'block';
+            paymentEl.style.animation = 'slideUp 0.4s ease';
+            document.getElementById('payment-amount').textContent =
+              `支付金额: ${pkg.eth} ETH（${pkg.chips.toLocaleString()} 筹码）`;
+          }, 300);
+        });
+      });
+
+      // Copy address
+      document.getElementById('btn-copy-addr').addEventListener('click', () => {
+        const addr = document.getElementById('eth-address').textContent;
+        navigator.clipboard.writeText(addr).then(() => {
+          const btn = document.getElementById('btn-copy-addr');
+          btn.textContent = '已复制 ✓';
+          setTimeout(() => { btn.textContent = '复制地址'; }, 2000);
+        }).catch(() => {
+          // Fallback
+          const ta = document.createElement('textarea');
+          ta.value = addr;
+          document.body.appendChild(ta);
+          ta.select();
+          document.execCommand('copy');
+          ta.remove();
+        });
+      });
+
+      // Confirm payment
+      document.getElementById('btn-pay').addEventListener('click', () => {
+        if (selectedChips > 0) {
+          overlay.remove();
+          resolve(selectedChips);
+        }
       });
     });
   }

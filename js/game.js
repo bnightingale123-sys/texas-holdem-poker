@@ -408,16 +408,28 @@ class Game {
     const alivePlayers = this.players.filter(p => p.chips > 0);
     if (this.players[0].chips <= 0 || alivePlayers.length <= 1) {
       const playerChips = this.players[0].chips;
-      await UI.showGameOver(playerChips);
-      // When player has no chips, wait for manual restart from start screen
+
       if (playerChips <= 0) {
-        document.getElementById('game-screen').classList.add('hidden');
-        document.getElementById('start-screen').classList.remove('hidden');
-        document.getElementById('start-btn').textContent = '重新开始';
+        // Player out of chips → show recharge page
+        const rechargeAmount = await UI.showRechargeModal();
+
+        if (rechargeAmount > 0) {
+          // Recharge successful — start a fresh game with purchased chips
+          this.init();
+          this.players[0].chips = rechargeAmount;
+          await UI.showMessage(`充值成功！获得 $${rechargeAmount.toLocaleString()} 筹码`, 2500);
+          this.startRound();
+        }
+        // If user cancelled the recharge modal, nothing happens — the modal just closes.
+        // The recharge modal has no cancel button when chips=0, forcing recharge to continue.
         return;
       }
-      this.init();
-      this.startRound();
+
+      // Human won (others busted)
+      await UI.showGameOver(playerChips);
+      document.getElementById('game-screen').classList.add('hidden');
+      document.getElementById('start-screen').classList.remove('hidden');
+      document.getElementById('start-btn').textContent = '重新开始';
       return;
     }
 
