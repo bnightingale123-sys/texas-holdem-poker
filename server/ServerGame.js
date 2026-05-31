@@ -30,7 +30,7 @@ class ServerGame {
   addPlayer(id, name, socketId) {
     if (this.players.length >= 4) return false;
     this.players.push({
-      id, name, chips: 10000, holeCards: [], bet: 0,
+      id, name, chips: 10000, holeCards: [], bet: 0, totalBet: 0,
       folded: false, allIn: false, isAI: false, ai: null, socketId
     });
     return true;
@@ -44,7 +44,7 @@ class ServerGame {
       const name = aiNames[idx];
       const ai = new AIPlayer(name, aiStyles[idx]);
       this.players.push({
-        id: ai.id, name, chips: 10000, holeCards: [], bet: 0,
+        id: ai.id, name, chips: 10000, holeCards: [], bet: 0, totalBet: 0,
         folded: false, allIn: false, isAI: true, ai, socketId: null
       });
       idx++;
@@ -92,6 +92,7 @@ class ServerGame {
     for (const p of this.players) {
       p.holeCards = [];
       p.bet = 0;
+      p.totalBet = 0;
       p.folded = p.chips <= 0;
       p.allIn = false;
     }
@@ -178,6 +179,7 @@ class ServerGame {
     const actual = Math.min(amount, p.chips);
     p.chips -= actual;
     p.bet = actual;
+    p.totalBet += actual;
     this.pot += actual;
     if (p.chips === 0) p.allIn = true;
   }
@@ -262,7 +264,7 @@ class ServerGame {
         break;
       case 'call': {
         const toCall = Math.min(this.currentBet - p.bet, p.chips);
-        p.chips -= toCall; p.bet += toCall; this.pot += toCall;
+        p.chips -= toCall; p.bet += toCall; p.totalBet += toCall; this.pot += toCall;
         if (p.chips === 0) p.allIn = true;
         actionLabel = p.allIn ? 'allin' : 'call';
         actionAmount = toCall;
@@ -273,7 +275,7 @@ class ServerGame {
         let raiseAmt = Math.max(amount || this.minRaise, this.minRaise);
         let total = toCall + raiseAmt;
         if (total > p.chips) total = p.chips;
-        p.chips -= total; p.bet += total; this.pot += total;
+        p.chips -= total; p.bet += total; p.totalBet += total; this.pot += total;
         this.lastRaiseSize = p.bet - this.currentBet;
         this.currentBet = p.bet;
         this.minRaise = Math.max(this.lastRaiseSize, this.bigBlind);
@@ -285,7 +287,7 @@ class ServerGame {
       }
       case 'allin': {
         const all = p.chips;
-        p.bet += all; this.pot += all; p.chips = 0; p.allIn = true;
+        p.bet += all; p.totalBet += all; this.pot += all; p.chips = 0; p.allIn = true;
         if (p.bet > this.currentBet) {
           this.lastRaiseSize = p.bet - this.currentBet;
           this.currentBet = p.bet;
@@ -322,24 +324,56 @@ class ServerGame {
     this.broadcast('showCards', { players: revealData });
     await this.sleep(500);
 
-    let winners = [];
+    const winners = [];
     if (active.length === 1) {
-      winners = [{ name: active[0].name, amount: this.pot, handName: null, index: active[0].index }];
+      const winner = active[0];
+      this.players[winner.index].chips += this.pot;
+      winners.push({ name: winner.name, amount: this.pot, handName: null, index: winner.index });
     } else {
-      let bestResult = null, bestPlayers = [];
+      // Evaluate each active player's hand once
       for (const p of active) {
-        const r = evaluateHand([...p.holeCards, ...this.communityCards]);
-        p.handResult = r;
-        if (!bestResult || compareHandResult(r, bestResult) > 0) { bestResult = r; bestPlayers = [p]; }
-        else if (compareHandResult(r, bestResult) === 0) bestPlayers.push(p);
+        p.handResult = evaluateHand([...p.holeCards, ...this.communityCards]);
       }
-      const share = Math.floor(this.pot / bestPlayers.length);
-      winners = bestPlayers.map(p => ({ name: p.name, amount: share, handName: p.handResult.name, index: p.index }));
+
+      // Calculate side pots
+      const pots = this.calculateSidePots();
+
+      // Resolve each pot independently
+      for (const pot of pots) {
+        const eligible = active.filter(p => pot.eligible.includes(p.index));
+        if (eligible.length === 0) continue;
+
+        let bestHand = eligible[0].handResult;
+        let bestPlayers = [eligible[0]];
+
+        for (const p of eligible.slice(1)) {
+          const cmp = compareHandResult(p.handResult, bestHand);
+          if (cmp > 0) { bestHand = p.handResult; bestPlayers = [p]; }
+          else if (cmp === 0) bestPlayers.push(p);
+        }
+
+        const share = Math.floor(pot.amount / bestPlayers.length);
+        for (const w of bestPlayers) {
+          this.players[w.index].chips += share;
+          winners.push({ name: w.name, amount: share, handName: w.handResult.name, index: w.index });
+        }
+      }
     }
 
-    for (const w of winners) this.players[w.index].chips += w.amount;
+    // Merge duplicate winners (same player winning multiple pots)
+    const mergedWinners = [];
+    const seen = new Set();
+    for (const w of winners) {
+      if (!seen.has(w.index)) {
+        seen.add(w.index);
+        const totalAmount = winners
+          .filter(x => x.index === w.index)
+          .reduce((sum, x) => sum + x.amount, 0);
+        mergedWinners.push({ ...w, amount: totalAmount });
+      }
+    }
 
-    this.broadcast('roundEnd', { winners, players: this.getPublicPlayers() });
+    this.broadcast('roundEnd', { winners: mergedWinners, players: this.getPublicPlayers() });
 
     // Check game over
     const alive = this.players.filter(p => p.chips > 0);
@@ -356,8 +390,38 @@ class ServerGame {
     }
 
     await this.sleep(3000);
-    // Use setTimeout to prevent stack overflow from recursive calls in long games
     setTimeout(() => this.startRound(), 0);
+  }
+
+  // Calculate side pots for all-in scenarios
+  calculateSidePots() {
+    const entries = this.players
+      .map((p, i) => ({ index: i, totalBet: p.totalBet, folded: p.folded }))
+      .filter(p => p.totalBet > 0)
+      .sort((a, b) => a.totalBet - b.totalBet);
+
+    const pots = [];
+    let prevBet = 0;
+
+    for (const entry of entries) {
+      if (entry.totalBet <= prevBet) continue;
+
+      const diff = entry.totalBet - prevBet;
+      const contributorCount = this.players.filter(p => p.totalBet >= entry.totalBet).length;
+      const amount = diff * contributorCount;
+
+      const eligible = this.players
+        .filter(p => !p.folded && p.totalBet >= entry.totalBet)
+        .map(p => this.players.indexOf(p));
+
+      if (amount > 0 && eligible.length > 0) {
+        pots.push({ amount, eligible });
+      }
+
+      prevBet = entry.totalBet;
+    }
+
+    return pots;
   }
 
   // Helpers

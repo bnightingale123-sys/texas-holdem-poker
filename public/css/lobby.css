@@ -378,3 +378,105 @@
   background: rgba(255,255,255,0.12);
   transform: scale(1.1);
 }
+
+/* ============================================
+   MOBILE RESPONSIVE — LOBBY
+   ============================================ */
+
+@media (max-width: 768px) {
+  .lobby-content {
+    width: 100%;
+    max-width: 92vw;
+    padding: 0 4px;
+  }
+
+  .lobby-logo {
+    font-size: 2.1rem;
+    letter-spacing: 1px;
+  }
+
+  .lobby-subtitle {
+    font-size: 0.78rem;
+    margin-bottom: 28px;
+    letter-spacing: 2px;
+  }
+
+  .lobby-btn {
+    padding: 13px 20px;
+    font-size: 0.88rem;
+  }
+
+  .lobby-suits {
+    margin-top: 28px;
+  }
+
+  .lobby-suit {
+    font-size: 1.5rem;
+  }
+
+  /* Waiting room */
+  .waiting-content {
+    width: 100%;
+    max-width: 88vw;
+  }
+
+  .room-id-display {
+    font-size: 1.6rem;
+    letter-spacing: 4px;
+    padding: 8px 18px;
+  }
+
+  /* Connection status bar */
+  .connection-status {
+    top: 8px;
+    right: 10px;
+    font-size: 0.65rem;
+    gap: 4px;
+  }
+
+  .sound-toggle {
+    width: 26px;
+    height: 26px;
+    font-size: 0.82rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .lobby-logo {
+    font-size: 1.75rem;
+  }
+
+  .lobby-subtitle {
+    font-size: 0.7rem;
+    letter-spacing: 1.5px;
+    margin-bottom: 22px;
+  }
+
+  .name-input {
+    font-size: 0.9rem;
+    padding: 11px 14px;
+  }
+
+  .lobby-btn {
+    padding: 12px 16px;
+    font-size: 0.82rem;
+  }
+
+  .name-section {
+    margin-bottom: 20px;
+  }
+
+  .waiting-title {
+    font-size: 1.3rem;
+  }
+
+  .room-id-display {
+    font-size: 1.4rem;
+    letter-spacing: 3px;
+  }
+
+  .start-game-btn {
+    padding: 12px 28px;
+    font-size: 0.85rem;
+  }
+}

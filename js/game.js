@@ -33,10 +33,10 @@ class Game {
   init() {
     // Player 0 = human, 1-3 = AI
     this.players = [
-      { name: '你', chips: 10000, holeCards: [], bet: 0, folded: false, isHuman: true, isDealer: false, isActive: false, allIn: false, ai: null },
-      { name: AI_NAMES[0], chips: 10000, holeCards: [], bet: 0, folded: false, isHuman: false, isDealer: false, isActive: false, allIn: false, ai: new AIPlayer(AI_NAMES[0], 'balanced') },
-      { name: AI_NAMES[1], chips: 10000, holeCards: [], bet: 0, folded: false, isHuman: false, isDealer: false, isActive: false, allIn: false, ai: new AIPlayer(AI_NAMES[1], 'aggressive') },
-      { name: AI_NAMES[2], chips: 10000, holeCards: [], bet: 0, folded: false, isHuman: false, isDealer: false, isActive: false, allIn: false, ai: new AIPlayer(AI_NAMES[2], 'tight') }
+      { name: '你', chips: 10000, holeCards: [], bet: 0, totalBet: 0, folded: false, isHuman: true, isDealer: false, isActive: false, allIn: false, ai: null },
+      { name: AI_NAMES[0], chips: 10000, holeCards: [], bet: 0, totalBet: 0, folded: false, isHuman: false, isDealer: false, isActive: false, allIn: false, ai: new AIPlayer(AI_NAMES[0], 'balanced') },
+      { name: AI_NAMES[1], chips: 10000, holeCards: [], bet: 0, totalBet: 0, folded: false, isHuman: false, isDealer: false, isActive: false, allIn: false, ai: new AIPlayer(AI_NAMES[1], 'aggressive') },
+      { name: AI_NAMES[2], chips: 10000, holeCards: [], bet: 0, totalBet: 0, folded: false, isHuman: false, isDealer: false, isActive: false, allIn: false, ai: new AIPlayer(AI_NAMES[2], 'tight') }
     ];
     this.dealerIndex = Math.floor(Math.random() * 4);
     this.roundNumber = 0;
@@ -54,6 +54,7 @@ class Game {
     for (const p of this.players) {
       p.holeCards = [];
       p.bet = 0;
+      p.totalBet = 0;
       p.folded = p.chips <= 0;
       p.isActive = false;
       p.isWinner = false;
@@ -151,6 +152,7 @@ class Game {
     const actual = Math.min(amount, p.chips);
     p.chips -= actual;
     p.bet = actual;
+    p.totalBet += actual;
     this.pot += actual;
     if (p.chips === 0) p.allIn = true;
     UI.showPlayerBet(index, actual);
@@ -260,6 +262,7 @@ class Game {
         const toCall = Math.min(this.currentBet - p.bet, p.chips);
         p.chips -= toCall;
         p.bet += toCall;
+        p.totalBet += toCall;
         this.pot += toCall;
         if (p.chips === 0) p.allIn = true;
         UI.showActionLabel(index, p.allIn ? 'allin' : 'call');
@@ -275,6 +278,7 @@ class Game {
         if (totalBet > p.chips) totalBet = p.chips;
         p.chips -= totalBet;
         p.bet += totalBet;
+        p.totalBet += totalBet;
         this.pot += totalBet;
         const newBet = p.bet;
         this.lastRaiseSize = newBet - this.currentBet;
@@ -292,6 +296,7 @@ class Game {
       case 'allin': {
         const allAmount = p.chips;
         p.bet += allAmount;
+        p.totalBet += allAmount;
         this.pot += allAmount;
         p.chips = 0;
         p.allIn = true;
@@ -336,50 +341,68 @@ class Game {
 
     await this.sleep(500);
 
-    let winners = [];
+    const winners = [];
 
     if (activePlayers.length === 1) {
       // Everyone else folded
       const winner = activePlayers[0];
-      winner.chips = this.players[winner.index].chips;
-      winners = [{ name: winner.name, amount: this.pot, handName: null, index: winner.index }];
+      this.players[winner.index].chips += this.pot;
+      this.players[winner.index].isWinner = true;
+      winners.push({ name: winner.name, amount: this.pot, handName: null, index: winner.index });
     } else {
-      // Evaluate hands
-      let bestResult = null;
-      let bestPlayers = [];
-
+      // Evaluate each active player's hand once
       for (const p of activePlayers) {
-        const allCards = [...p.holeCards, ...this.communityCards];
-        const result = evaluateHand(allCards);
-        p.handResult = result;
-
-        if (!bestResult || compareHandResult(result, bestResult) > 0) {
-          bestResult = result;
-          bestPlayers = [p];
-        } else if (compareHandResult(result, bestResult) === 0) {
-          bestPlayers.push(p);
-        }
+        p.handResult = evaluateHand([...p.holeCards, ...this.communityCards]);
       }
 
-      const share = Math.floor(this.pot / bestPlayers.length);
-      winners = bestPlayers.map(p => ({
-        name: p.name,
-        amount: share,
-        handName: p.handResult.name,
-        index: p.index
-      }));
-    }
+      // Calculate side pots
+      const pots = this.calculateSidePots();
 
-    // Award chips
-    for (const w of winners) {
-      this.players[w.index].chips += w.amount;
-      this.players[w.index].isWinner = true;
+      // Resolve each pot independently
+      for (const pot of pots) {
+        const eligible = activePlayers.filter(p => pot.eligible.includes(p.index));
+        if (eligible.length === 0) continue;
+
+        // Find best hand among eligible players
+        let bestHand = eligible[0].handResult;
+        let bestPlayers = [eligible[0]];
+
+        for (const p of eligible.slice(1)) {
+          const cmp = compareHandResult(p.handResult, bestHand);
+          if (cmp > 0) {
+            bestHand = p.handResult;
+            bestPlayers = [p];
+          } else if (cmp === 0) {
+            bestPlayers.push(p);
+          }
+        }
+
+        const share = Math.floor(pot.amount / bestPlayers.length);
+        for (const w of bestPlayers) {
+          this.players[w.index].chips += share;
+          this.players[w.index].isWinner = true;
+          winners.push({ name: w.name, amount: share, handName: w.handResult.name, index: w.index });
+        }
+      }
     }
 
     this.updateAllUI();
 
+    // Merge duplicate winners (same player winning multiple pots)
+    const mergedWinners = [];
+    const seen = new Set();
+    for (const w of winners) {
+      if (!seen.has(w.index)) {
+        seen.add(w.index);
+        const totalAmount = winners
+          .filter(x => x.index === w.index)
+          .reduce((sum, x) => sum + x.amount, 0);
+        mergedWinners.push({ ...w, amount: totalAmount });
+      }
+    }
+
     // Show result modal
-    await UI.showRoundResult({ winners });
+    await UI.showRoundResult({ winners: mergedWinners });
 
     // Check game over
     const alivePlayers = this.players.filter(p => p.chips > 0);
@@ -397,6 +420,37 @@ class Game {
     }
 
     this.startRound();
+  }
+
+  // Calculate side pots for all-in scenarios
+  calculateSidePots() {
+    const entries = this.players
+      .map((p, i) => ({ index: i, totalBet: p.totalBet, folded: p.folded }))
+      .filter(p => p.totalBet > 0)
+      .sort((a, b) => a.totalBet - b.totalBet);
+
+    const pots = [];
+    let prevBet = 0;
+
+    for (const entry of entries) {
+      if (entry.totalBet <= prevBet) continue;
+
+      const diff = entry.totalBet - prevBet;
+      const contributorCount = this.players.filter(p => p.totalBet >= entry.totalBet).length;
+      const amount = diff * contributorCount;
+
+      const eligible = this.players
+        .filter(p => !p.folded && p.totalBet >= entry.totalBet)
+        .map(p => this.players.indexOf(p));
+
+      if (amount > 0 && eligible.length > 0) {
+        pots.push({ amount, eligible });
+      }
+
+      prevBet = entry.totalBet;
+    }
+
+    return pots;
   }
 
   // Helpers

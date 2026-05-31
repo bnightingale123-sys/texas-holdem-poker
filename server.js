@@ -103,6 +103,33 @@ io.on('connection', (socket) => {
     currentRoom.startGame();
   });
 
+  // Credits purchased via ETH
+  socket.on('creditsPurchased', (data) => {
+    const { credits, txHash, walletAddress } = data || {};
+    console.log(`[Credits] ${socket.id} purchased ${credits} credits | tx: ${txHash} | wallet: ${walletAddress}`);
+    // Notify the room so other players can react (e.g. show a VIP crown)
+    if (currentRoom) {
+      currentRoom.broadcast('playerCreditsUpdated', {
+        socketId: socket.id,
+        credits
+      });
+    }
+  });
+
+  // VIP purchased via ETH
+  socket.on('vipPurchased', (data) => {
+    const { txHash, walletAddress, expiresAt } = data || {};
+    const expiryStr = expiresAt ? new Date(expiresAt).toLocaleDateString('zh-CN') : '未知';
+    console.log(`[VIP] ${socket.id} activated VIP | expires: ${expiryStr} | tx: ${txHash} | wallet: ${walletAddress}`);
+    // Broadcast VIP status to the room so other players see the crown
+    if (currentRoom) {
+      currentRoom.broadcast('playerVIPActivated', {
+        socketId: socket.id,
+        expiresAt
+      });
+    }
+  });
+
   // Disconnect
   socket.on('disconnect', () => {
     console.log(`Player disconnected: ${socket.id}`);

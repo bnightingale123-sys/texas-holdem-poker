@@ -40,17 +40,35 @@
 }
 
 *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
-html { font-size:16px; -webkit-font-smoothing:antialiased; }
+html {
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+  /* Prevent iOS double-tap zoom */
+  touch-action: manipulation;
+}
 body {
   font-family: var(--font-body);
   background: var(--bg-primary);
   color: var(--text-primary);
   min-height: 100vh;
   overflow: hidden;
+  /* Prevent pull-to-refresh on mobile */
+  overscroll-behavior: none;
+  /* Remove tap highlight on mobile */
+  -webkit-tap-highlight-color: transparent;
 }
 h1,h2,h3 { font-family: var(--font-display); font-weight:700; }
 button { font-family: var(--font-body); cursor:pointer; border:none; outline:none; background:none; color:inherit; }
+input { font-family: var(--font-body); }
 .hidden { display:none !important; }
+
+/* Base font scaling for small screens */
+@media (max-width: 480px) {
+  html { font-size: 14px; }
+}
+@media (max-width: 360px) {
+  html { font-size: 13px; }
+}
 
 body::before {
   content:''; position:fixed; inset:0;

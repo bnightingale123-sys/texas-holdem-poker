@@ -16,6 +16,8 @@ const App = {
     this.setupLobbyEvents();
     this.setupGameControls();
     this.setupSoundToggle();
+    Credits.init();
+    UI.initMobile();
   },
 
   setupSoundToggle() {
@@ -35,7 +37,7 @@ const App = {
           this.roomId = res.roomId;
           this.isOwner = (res.players.length === 1);
           this.showWaitingRoom(res.roomId, res.players);
-        } else { UI.showError(res.reason); }
+        } else { UI.showError(res.reason || '匹配失败 Match failed'); }
       });
     });
 
@@ -55,13 +57,13 @@ const App = {
       Sound.click();
       const name = this.getPlayerName();
       const code = document.getElementById('room-code-input').value.trim().toUpperCase();
-      if (!code) { UI.showError('请输入房间号'); return; }
+      if (!code) { UI.showError('请输入房间号 Please enter room code'); return; }
       Network.joinRoom(code, name, (res) => {
         if (res.ok) {
           this.roomId = res.roomId;
           this.isOwner = false;
           this.showWaitingRoom(res.roomId, res.players);
-        } else { UI.showError(res.reason); }
+        } else { UI.showError(res.reason || '加入失败 Join failed'); }
       });
     });
 
@@ -153,7 +155,7 @@ const App = {
       UI.updatePlayerInfo(i, p);
     });
     UI.updateGameInfo({ round: data.round, smallBlind: data.smallBlind, bigBlind: data.bigBlind, roomId: this.roomId });
-    UI.showMessage(`第 ${data.round} 轮`, 1000);
+    UI.showMessage(`第 ${data.round} 轮 · Round ${data.round}`, 1000);
   },
 
   onBlindsPosted(data) {
@@ -165,8 +167,8 @@ const App = {
     UI.updatePot(data.pot);
     const sbP = data.players[data.sbIndex];
     const bbP = data.players[data.bbIndex];
-    UI.addLog(`<span class="log-action">${sbP.name}</span> 小盲 <span class="log-amount">$${data.sbAmount}</span>`);
-    UI.addLog(`<span class="log-action">${bbP.name}</span> 大盲 <span class="log-amount">$${data.bbAmount}</span>`);
+    UI.addLog(`<span class="log-action">${sbP.name}</span> 小盲 SB <span class="log-amount">$${data.sbAmount}</span>`);
+    UI.addLog(`<span class="log-action">${bbP.name}</span> 大盲 BB <span class="log-amount">$${data.bbAmount}</span>`);
   },
 
   onCardsDealt(data) {
@@ -186,7 +188,7 @@ const App = {
   },
 
   onCommunity(data) {
-    const phaseNames = { flop: '翻牌', turn: '转牌', river: '河牌' };
+    const phaseNames = { flop: '翻牌 Flop', turn: '转牌 Turn', river: '河牌 River' };
     // Play card sounds with delay for each community card
     const newCards = data.phase === 'flop' ? 3 : 1;
     for (let i = 0; i < newCards; i++) {
@@ -233,7 +235,7 @@ const App = {
     UI.updatePot(data.pot);
     this.currentPot = data.pot;
 
-    const actionNames = { fold:'弃牌', call:'跟注', raise:'加注到', check:'过牌', allin:'全押' };
+    const actionNames = { fold:'弃牌 Fold', call:'跟注 Call', raise:'加注到 Raised to', check:'过牌 Check', allin:'全押 All In' };
     const label = actionNames[data.action] || data.action;
     const amountStr = data.amount > 0 ? ` <span class="log-amount">$${data.amount.toLocaleString()}</span>` : '';
     UI.addLog(`<span class="log-action">${data.name}</span> ${label}${amountStr}`);

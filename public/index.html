@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <meta name="description" content="德州扑克 - 多人在线扑克游戏">
   <meta name="google-site-verification" content="td9shg4H6kQcn6GeQL6yNeY5U4eft9ml1gsxSbYao2s" />
   <title>德州扑克 | Texas Hold'em Poker Online</title>
@@ -10,7 +10,8 @@
   <link rel="stylesheet" href="css/table.css">
   <link rel="stylesheet" href="css/cards.css">
   <link rel="stylesheet" href="css/lobby.css">
-   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6323888514149114"
+  <link rel="stylesheet" href="css/credits.css">
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6323888514149114"
   crossorigin="anonymous"></script>
 </head>
 <body>
@@ -26,26 +27,26 @@
   <div id="lobby-screen">
     <div class="lobby-content">
       <h1 class="lobby-logo">TEXAS HOLD'EM</h1>
-      <p class="lobby-subtitle">德 州 扑 克 · 在 线 对 战</p>
+      <p class="lobby-subtitle">德 州 扑 克 · 在 线 对 战 · Online Multiplayer</p>
 
       <div class="name-section">
-        <input type="text" class="name-input" id="player-name-input" placeholder="输入你的昵称" maxlength="12">
+        <input type="text" class="name-input" id="player-name-input" placeholder="输入昵称 / Enter Nickname" maxlength="12">
       </div>
 
       <div class="lobby-actions">
         <button class="lobby-btn primary" id="btn-quick-match">
-          <span class="btn-icon">⚡</span> 快速匹配
+          <span class="btn-icon">⚡</span> 快速匹配 <span style="font-size:0.75em;opacity:0.75">Quick Match</span>
         </button>
 
         <button class="lobby-btn tertiary" id="btn-create-room">
-          <span class="btn-icon">🎯</span> 创建房间
+          <span class="btn-icon">🎯</span> 创建房间 <span style="font-size:0.75em;opacity:0.75">Create Room</span>
         </button>
 
-        <div class="lobby-divider">或加入已有房间</div>
+        <div class="lobby-divider">或加入房间 / Or Join Room</div>
 
         <div class="join-row">
-          <input type="text" class="room-code-input" id="room-code-input" placeholder="房间号" maxlength="6">
-          <button class="join-btn" id="btn-join-room">加入</button>
+          <input type="text" class="room-code-input" id="room-code-input" placeholder="房间号 Room Code" maxlength="6">
+          <button class="join-btn" id="btn-join-room">加入 Join</button>
         </div>
       </div>
 
@@ -61,15 +62,15 @@
   <!-- ===== Waiting Room ===== -->
   <div id="waiting-screen" class="hidden">
     <div class="waiting-content">
-      <h2 class="waiting-title">等待玩家加入</h2>
+      <h2 class="waiting-title">等待玩家加入 <span style="font-size:0.65em;opacity:0.7">Waiting for Players</span></h2>
       <div class="room-id-display" id="display-room-id">------</div>
-      <p class="room-id-hint">分享房间号给朋友加入</p>
+      <p class="room-id-hint">分享房间号给朋友 · Share room code with friends</p>
 
       <ul class="player-list" id="player-list"></ul>
 
-      <p class="waiting-status">等待更多玩家...</p>
+      <p class="waiting-status">等待更多玩家... Waiting for players...</p>
 
-      <button class="start-game-btn" id="btn-start-game">开始游戏 (AI 补位)</button>
+      <button class="start-game-btn" id="btn-start-game">开始游戏 Start Game <span style="font-size:0.8em;opacity:0.7">(AI 补位 Fill)</span></button>
     </div>
   </div>
 
@@ -79,15 +80,15 @@
     <!-- Game Info Bar -->
     <div class="game-info-bar">
       <div class="info-item">
-        <span class="label">房间</span>
+        <span class="label">房间 Room</span>
         <span class="value" id="info-room">-</span>
       </div>
       <div class="info-item">
-        <span class="label">轮次</span>
+        <span class="label">轮次 Round</span>
         <span class="value" id="info-round">#1</span>
       </div>
       <div class="info-item">
-        <span class="label">盲注</span>
+        <span class="label">盲注 Blinds</span>
         <span class="value" id="info-blinds">$50/$100</span>
       </div>
     </div>
@@ -134,17 +135,17 @@
 
     <!-- Controls -->
     <div class="controls-panel" id="controls-panel" style="opacity:0.4; pointer-events:none;">
-      <button class="btn btn-fold" id="btn-fold">FOLD</button>
-      <button class="btn btn-check" id="btn-check">CHECK</button>
-      <button class="btn btn-call hidden" id="btn-call">CALL</button>
+      <button class="btn btn-fold" id="btn-fold">FOLD 弃牌</button>
+      <button class="btn btn-check" id="btn-check">CHECK 过牌</button>
+      <button class="btn btn-call hidden" id="btn-call">CALL 跟注</button>
       <div class="raise-control">
-        <button class="btn btn-raise" id="btn-raise">RAISE</button>
+        <button class="btn btn-raise" id="btn-raise">RAISE 加注</button>
         <input type="number" class="raise-input" id="raise-input" value="100" min="100">
-        <button class="btn" id="raise-half-pot" style="font-size:0.7rem;padding:6px 8px;background:var(--bg-tertiary);border-radius:var(--radius-sm);">½池</button>
-        <button class="btn" id="raise-pot" style="font-size:0.7rem;padding:6px 8px;background:var(--bg-tertiary);border-radius:var(--radius-sm);">底池</button>
+        <button class="btn" id="raise-half-pot" style="font-size:0.7rem;padding:6px 8px;background:var(--bg-tertiary);border-radius:var(--radius-sm);">½ Pot</button>
+        <button class="btn" id="raise-pot" style="font-size:0.7rem;padding:6px 8px;background:var(--bg-tertiary);border-radius:var(--radius-sm);">Pot 底池</button>
         <button class="btn" id="raise-2x" style="font-size:0.7rem;padding:6px 8px;background:var(--bg-tertiary);border-radius:var(--radius-sm);">2x</button>
       </div>
-      <button class="btn btn-allin" id="btn-allin">ALL IN</button>
+      <button class="btn btn-allin" id="btn-allin">ALL IN 全押</button>
     </div>
 
     <div class="game-log" id="game-log"></div>
@@ -158,6 +159,7 @@
   <script src="js/sound.js"></script>
   <script src="js/network.js"></script>
   <script src="js/ui.js"></script>
+  <script src="js/credits.js"></script>
   <script src="js/main.js"></script>
 </body>
 </html>

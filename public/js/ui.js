@@ -92,7 +92,7 @@ const UI = {
     const old = seat.querySelector('.player-action-label');
     if (old) old.remove();
     if (!action) return;
-    const labels = { fold:'Fold', call:'Call', raise:'Raise', check:'Check', allin:'All In' };
+    const labels = { fold:'弃牌 Fold', call:'跟注 Call', raise:'加注 Raise', check:'过牌 Check', allin:'全押 All In' };
     const label = document.createElement('div');
     label.className = `player-action-label ${action}`;
     label.textContent = labels[action] || action;
@@ -102,7 +102,7 @@ const UI = {
 
   updatePot(amount) {
     const el = document.getElementById('pot-amount');
-    if (el) el.textContent = `底池: $${amount.toLocaleString()}`;
+    if (el) el.textContent = `底池 Pot: $${amount.toLocaleString()}`;
   },
 
   updateControls(state) {
@@ -121,9 +121,9 @@ const UI = {
     document.getElementById('btn-check').classList.toggle('hidden', !canCheck);
     document.getElementById('btn-call').classList.toggle('hidden', canCheck);
     if (!canCheck) {
-      document.getElementById('btn-call').textContent = `CALL $${Math.min(toCall, state.playerChips).toLocaleString()}`;
+      document.getElementById('btn-call').textContent = `CALL 跟注 $${Math.min(toCall, state.playerChips).toLocaleString()}`;
     }
-    document.getElementById('btn-allin').textContent = `ALL IN $${state.playerChips.toLocaleString()}`;
+    document.getElementById('btn-allin').textContent = `ALL IN 全押 $${state.playerChips.toLocaleString()}`;
     const ri = document.getElementById('raise-input');
     if (ri) { ri.min = state.minRaise; ri.max = state.playerChips; ri.value = state.minRaise; }
   },
@@ -181,8 +181,8 @@ const UI = {
           ${w.handName ? `<br><span class="hand-name">${w.handName}</span>` : ''}
         </div>`;
       }
-      modal.innerHTML = `<div class="round-modal-content"><h2>🏆 本轮结束</h2>${html}
-        <button class="next-round-btn" id="next-round-btn">继续</button></div>`;
+      modal.innerHTML = `<div class="round-modal-content"><h2>🏆 本轮结束 <span style="font-size:0.6em;opacity:0.7">Round Over</span></h2>${html}
+        <button class="next-round-btn" id="next-round-btn">继续 Next Round</button></div>`;
       document.body.appendChild(modal);
       document.getElementById('next-round-btn').addEventListener('click', () => { modal.remove(); resolve(); });
       // Auto close after 5s
@@ -196,9 +196,9 @@ const UI = {
       overlay.className = 'game-over-overlay';
       const won = myChips > 0;
       overlay.innerHTML = `
-        <h1>${won ? '🎉 恭喜你!' : '💔 游戏结束'}</h1>
-        <p>${won ? `你赢得了 $${myChips.toLocaleString()}` : '你的筹码已用完'}</p>
-        <button class="restart-btn" id="restart-btn">重新开始</button>`;
+        <h1>${won ? '🎉 恭喜! Congratulations!' : '💔 游戏结束 Game Over'}</h1>
+        <p>${won ? `你赢得了 You won <strong>$${myChips.toLocaleString()}</strong>` : '你的筹码已用完 You ran out of chips'}</p>
+        <button class="restart-btn" id="restart-btn">重新开始 Restart</button>`;
       document.body.appendChild(overlay);
       document.getElementById('restart-btn').addEventListener('click', () => {
         overlay.remove();
@@ -216,7 +216,6 @@ const UI = {
     setTimeout(() => { if (toast.parentNode) toast.remove(); }, 3000);
   },
 
-  // Update waiting room player list
   updateWaitingList(players) {
     const list = document.getElementById('player-list');
     if (!list) return;
@@ -225,13 +224,55 @@ const UI = {
       const li = document.createElement('li');
       if (i < players.length) {
         const p = players[i];
-        li.innerHTML = `<span class="seat-num">座位 ${i+1}</span><span class="player-tag">${p.name}</span>`;
+        li.innerHTML = `<span class="seat-num">座位 Seat ${i+1}</span><span class="player-tag">${p.name}</span>`;
         if (p.isAI) li.classList.add('ai-player');
       } else {
         li.className = 'empty';
-        li.innerHTML = `<span class="seat-num">座位 ${i+1}</span><span>等待加入...</span>`;
+        li.innerHTML = `<span class="seat-num">座位 Seat ${i+1}</span><span>等待加入 Waiting...</span>`;
       }
       list.appendChild(li);
     }
+  },
+
+  // ---- Mobile Enhancements ----
+  initMobile() {
+    // Only apply on touch devices
+    if (!('ontouchstart' in window)) return;
+
+    // 1. Prevent context menu on long-press (interferes with game buttons)
+    document.addEventListener('contextmenu', e => e.preventDefault());
+
+    // 2. Prevent text selection on double-tap for all buttons
+    document.querySelectorAll('button').forEach(btn => {
+      btn.addEventListener('touchstart', e => e.preventDefault(), { passive: false });
+    });
+
+    // 3. Inject floating log toggle button (only shows on ≤480px via CSS)
+    const logToggle = document.createElement('button');
+    logToggle.id = 'mobile-log-toggle';
+    logToggle.innerHTML = '📋';
+    logToggle.title = '游戏日志';
+    document.body.appendChild(logToggle);
+
+    const gameLog = document.getElementById('game-log');
+    let logVisible = false;
+    logToggle.addEventListener('click', () => {
+      logVisible = !logVisible;
+      if (gameLog) {
+        gameLog.style.display = logVisible ? 'block' : '';
+        logToggle.innerHTML = logVisible ? '✕' : '📋';
+        logToggle.classList.toggle('active', logVisible);
+      }
+    });
+
+    // 4. Show log toggle only during game
+    const observer = new MutationObserver(() => {
+      const inGame = document.getElementById('game-screen') &&
+        !document.getElementById('game-screen').classList.contains('hidden');
+      logToggle.style.display = inGame ? '' : 'none';
+    });
+    const gameScreen = document.getElementById('game-screen');
+    if (gameScreen) observer.observe(gameScreen, { attributes: true, attributeFilter: ['class'] });
+    logToggle.style.display = 'none'; // Hidden until game starts
   }
 };

@@ -189,6 +189,7 @@
 .controls-panel {
   position: fixed;
   bottom: 20px;
+  bottom: calc(20px + env(safe-area-inset-bottom, 0px));
   left: 50%;
   transform: translateX(-50%);
   display: flex;
@@ -350,6 +351,7 @@
 .game-info-bar {
   position: fixed;
   top: 15px;
+  top: calc(15px + env(safe-area-inset-top, 0px));
   left: 50%;
   transform: translateX(-50%);
   display: flex;
@@ -527,4 +529,232 @@
 .restart-btn:hover {
   transform: translateY(-2px);
   box-shadow: 0 4px 15px var(--gold-glow);
+}
+
+/* ============================================
+   MOBILE RESPONSIVE — TABLE & GAME UI
+   ============================================ */
+
+/* ---- Tablet (≤ 960px) ---- */
+@media (max-width: 960px) {
+  .poker-table-container {
+    width: 700px;
+    height: 390px;
+  }
+  .poker-table {
+    border-radius: 195px;
+  }
+  .poker-table::before {
+    border-radius: 185px;
+  }
+  .player-seat[data-position="1"] { left: -30px; }
+  .player-seat[data-position="3"] { right: -30px; }
+}
+
+/* ---- Mobile landscape / small tablet (≤ 768px) ---- */
+@media (max-width: 768px) {
+  /* Scale the whole table to fit the viewport */
+  #game-screen {
+    overflow: hidden;
+    align-items: flex-start;
+    padding-top: 60px;
+    padding-bottom: 140px;
+    box-sizing: border-box;
+  }
+
+  .poker-table-container {
+    width: min(90vw, 560px);
+    height: min(50vw, 310px);
+    transform-origin: center top;
+  }
+
+  .poker-table {
+    border-radius: 50%;
+    border-width: 10px;
+  }
+
+  /* Seat positions re-scaled for smaller table */
+  .player-seat[data-position="0"] { bottom: -50px; }
+  .player-seat[data-position="1"] { left: -25px; }
+  .player-seat[data-position="2"] { top: -50px; }
+  .player-seat[data-position="3"] { right: -25px; }
+
+  .player-info {
+    min-width: 90px;
+    padding: 6px 10px;
+  }
+  .player-name { font-size: 0.75rem; }
+  .player-chips { font-size: 0.68rem; }
+
+  /* Controls: wrap into two rows */
+  .controls-panel {
+    bottom: 0;
+    left: 0;
+    right: 0;
+    transform: none;
+    border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+    padding: 12px 14px;
+    padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    box-sizing: border-box;
+    border-left: none;
+    border-right: none;
+    border-bottom: none;
+  }
+
+  .btn {
+    padding: 10px 16px;
+    font-size: 0.78rem;
+    flex: 1 1 auto;
+    min-width: 72px;
+    max-width: 120px;
+  }
+
+  .raise-control {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 6px;
+    width: 100%;
+    order: 10;
+  }
+
+  .raise-input {
+    width: 80px;
+    font-size: 0.8rem;
+    padding: 8px;
+  }
+
+  /* Game log: top-right, smaller */
+  .game-log {
+    bottom: auto;
+    top: 56px;
+    right: 8px;
+    width: 180px;
+    max-height: 130px;
+    font-size: 0.65rem;
+  }
+
+  /* Game info bar: compact */
+  .game-info-bar {
+    gap: 12px;
+    padding: 6px 16px;
+    font-size: 0.72rem;
+  }
+
+  /* Pot display */
+  .pot-amount {
+    font-size: 0.9rem;
+    padding: 3px 12px;
+  }
+
+  /* Message overlay */
+  .message-text {
+    font-size: 1.4rem;
+    padding: 10px 24px;
+  }
+
+  /* Round modal */
+  .round-modal-content {
+    padding: 24px 20px;
+    min-width: 280px;
+    max-width: 90vw;
+  }
+
+  .round-modal h2 { font-size: 1.3rem; }
+
+  /* Game over */
+  .game-over-overlay h1 { font-size: 2.2rem; }
+  .game-over-overlay p { font-size: 1rem; }
+}
+
+/* ---- Mobile portrait (≤ 480px) ---- */
+@media (max-width: 480px) {
+  /* Shrink the table further */
+  .poker-table-container {
+    width: 92vw;
+    height: 48vw;
+  }
+
+  /* Side seats: pull in closer */
+  .player-seat[data-position="1"] { left: -18px; }
+  .player-seat[data-position="3"] { right: -18px; }
+
+  .player-info {
+    min-width: 76px;
+    padding: 5px 8px;
+  }
+  .player-name { font-size: 0.68rem; }
+  .player-chips { font-size: 0.62rem; }
+
+  /* Controls: stack main buttons top, raise row below */
+  .controls-panel {
+    padding: 10px 10px 18px;
+    gap: 6px;
+  }
+
+  .btn {
+    padding: 9px 12px;
+    font-size: 0.72rem;
+    min-width: 60px;
+  }
+
+  .raise-input { width: 70px; }
+
+  /* Smaller community cards */
+  .community-cards { gap: 6px; }
+
+  /* Bet labels: smaller */
+  .player-bet { font-size: 0.65rem; padding: 2px 7px; }
+
+  /* Action labels */
+  .player-action-label { font-size: 0.6rem; padding: 2px 7px; }
+
+  /* Game log: hidden by default on very small screens, shown via JS toggle */
+  .game-log { display: none; }
+
+  /* Floating log toggle button */
+  #mobile-log-toggle {
+    display: flex;
+    position: fixed;
+    bottom: calc(160px + env(safe-area-inset-bottom, 0px));
+    left: 14px;
+    width: 40px;
+    height: 40px;
+    background: rgba(10,14,20,0.88);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 50%;
+    font-size: 1.1rem;
+    align-items: center;
+    justify-content: center;
+    z-index: 200;
+    backdrop-filter: blur(12px);
+    transition: background 150ms ease;
+  }
+
+  #mobile-log-toggle.active {
+    background: rgba(98,126,234,0.25);
+    border-color: rgba(98,126,234,0.5);
+  }
+
+  /* When log is force-shown via toggle on mobile */
+  #game-screen .game-log[style*="block"] {
+    display: block;
+    bottom: calc(155px + env(safe-area-inset-bottom, 0px));
+    left: 60px;
+    right: 8px;
+    width: auto;
+    max-height: 160px;
+    font-size: 0.62rem;
+  }
+
+
+  /* Game info bar: tighter */
+  .game-info-bar {
+    gap: 8px;
+    padding: 5px 12px;
+    font-size: 0.65rem;
+  }
 }
