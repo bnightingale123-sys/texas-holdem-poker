@@ -31,6 +31,10 @@ const App = {
   setupLobbyEvents() {
     document.getElementById('btn-quick-match').addEventListener('click', () => {
       Sound.click();
+      if (!Credits.canAffordGame()) {
+        Credits.openModal();
+        return;
+      }
       const name = this.getPlayerName();
       Network.quickMatch(name, (res) => {
         if (res.ok) {
@@ -43,6 +47,10 @@ const App = {
 
     document.getElementById('btn-create-room').addEventListener('click', () => {
       Sound.click();
+      if (!Credits.canAffordGame()) {
+        Credits.openModal();
+        return;
+      }
       const name = this.getPlayerName();
       Network.createRoom(name, (res) => {
         if (res.ok) {
@@ -58,6 +66,10 @@ const App = {
       const name = this.getPlayerName();
       const code = document.getElementById('room-code-input').value.trim().toUpperCase();
       if (!code) { UI.showError('请输入房间号 Please enter room code'); return; }
+      if (!Credits.canAffordGame()) {
+        Credits.openModal();
+        return;
+      }
       Network.joinRoom(code, name, (res) => {
         if (res.ok) {
           this.roomId = res.roomId;
@@ -69,6 +81,10 @@ const App = {
 
     document.getElementById('btn-start-game').addEventListener('click', () => {
       Sound.click();
+      if (!Credits.canAffordGame()) {
+        Credits.openModal();
+        return;
+      }
       Network.startGame();
     });
   },
@@ -279,8 +295,17 @@ const App = {
           }
           Network.requestNewGame();
         } else {
-          UI.showError('积分不足！请领取每日积分或充值 · Insufficient credits! Claim daily bonus or top up.');
-          setTimeout(() => Credits.openModal(), 600);
+          // Directly open recharge modal - no toast, no delay
+          Credits.setPendingRestart(() => {
+            if (Credits.canAffordGame()) {
+              if (!Credits.spendForGame()) {
+                UI.showError('积分扣除失败 Deduction failed');
+                return;
+              }
+              Network.requestNewGame();
+            }
+          });
+          Credits.openModal();
         }
       } else {
         // Player still has chips — free restart

@@ -81,6 +81,21 @@ const Credits = {
     return true;
   },
 
+  // ---- Pending restart (when credits run out during game) ----
+  _pendingRestartCallback: null,
+
+  setPendingRestart(callback) {
+    this._pendingRestartCallback = callback;
+  },
+
+  _checkPendingRestart() {
+    if (this._pendingRestartCallback && this.balance >= this.COST_PER_GAME) {
+      const cb = this._pendingRestartCallback;
+      this._pendingRestartCallback = null;
+      cb();
+    }
+  },
+
   // ---- Daily free claim logic ----
   canClaimDaily() {
     const lastClaim = localStorage.getItem('poker_daily_claim');
@@ -97,6 +112,7 @@ const Credits = {
     this.saveBalance();
     this.updateDisplay();
     this.updateDailyClaimUI();
+    this._checkPendingRestart();
     return true;
   },
 
@@ -132,6 +148,7 @@ const Credits = {
     this.balance += amount;
     this.saveBalance();
     this.updateDisplay();
+    this._checkPendingRestart();
   },
 
   getBalance() {
@@ -380,6 +397,8 @@ const Credits = {
   closeModal() {
     const modal = document.getElementById('credits-modal');
     if (modal) modal.classList.add('hidden');
+    // Clear pending restart so it doesn't fire unexpectedly
+    this._pendingRestartCallback = null;
   },
 
   updateDisplay() {
