@@ -16,8 +16,7 @@ function setupEventListeners() {
     if (game.needsRecharge || localStorage.getItem('needsRecharge') === 'true') {
       const amount = await UI.showRechargeModal();
       if (amount > 0) {
-        game.init();
-        game.players[0].chips = amount;
+        game.init(amount);
         document.getElementById('start-screen').classList.add('hidden');
         document.getElementById('game-screen').classList.remove('hidden');
         await UI.showMessage(`充值成功！获得 $${amount.toLocaleString()} 筹码`, 2500);

@@ -30,15 +30,16 @@ class Game {
     this.resolvePlayerAction = null;
   }
 
-  init() {
+  init(startingChips) {
     this.needsRecharge = false;
     localStorage.removeItem('needsRecharge');
+    const chips = startingChips !== undefined ? startingChips : 10000;
     // Player 0 = human, 1-3 = AI
     this.players = [
-      { name: '你', chips: 10000, holeCards: [], bet: 0, totalBet: 0, folded: false, isHuman: true, isDealer: false, isActive: false, allIn: false, ai: null },
-      { name: AI_NAMES[0], chips: 10000, holeCards: [], bet: 0, totalBet: 0, folded: false, isHuman: false, isDealer: false, isActive: false, allIn: false, ai: new AIPlayer(AI_NAMES[0], 'balanced') },
-      { name: AI_NAMES[1], chips: 10000, holeCards: [], bet: 0, totalBet: 0, folded: false, isHuman: false, isDealer: false, isActive: false, allIn: false, ai: new AIPlayer(AI_NAMES[1], 'aggressive') },
-      { name: AI_NAMES[2], chips: 10000, holeCards: [], bet: 0, totalBet: 0, folded: false, isHuman: false, isDealer: false, isActive: false, allIn: false, ai: new AIPlayer(AI_NAMES[2], 'tight') }
+      { name: '你', chips: chips, holeCards: [], bet: 0, totalBet: 0, folded: false, isHuman: true, isDealer: false, isActive: false, allIn: false, ai: null },
+      { name: AI_NAMES[0], chips: chips, holeCards: [], bet: 0, totalBet: 0, folded: false, isHuman: false, isDealer: false, isActive: false, allIn: false, ai: new AIPlayer(AI_NAMES[0], 'balanced') },
+      { name: AI_NAMES[1], chips: chips, holeCards: [], bet: 0, totalBet: 0, folded: false, isHuman: false, isDealer: false, isActive: false, allIn: false, ai: new AIPlayer(AI_NAMES[1], 'aggressive') },
+      { name: AI_NAMES[2], chips: chips, holeCards: [], bet: 0, totalBet: 0, folded: false, isHuman: false, isDealer: false, isActive: false, allIn: false, ai: new AIPlayer(AI_NAMES[2], 'tight') }
     ];
     this.dealerIndex = Math.floor(Math.random() * 4);
     this.roundNumber = 0;
@@ -419,8 +420,7 @@ class Game {
 
         if (rechargeAmount > 0) {
           // Recharge successful — start a fresh game with purchased chips
-          this.init();
-          this.players[0].chips = rechargeAmount;
+          this.init(rechargeAmount);
           await UI.showMessage(`充值成功！获得 $${rechargeAmount.toLocaleString()} 筹码`, 2500);
           this.startRound();
         }
