@@ -88,18 +88,47 @@ io.on('connection', (socket) => {
     currentRoom.game.handleAction(socket.id, decision);
   });
 
-  // Request new round (after game over)
+  // Request new round (after game over) — preserve human chip counts
   socket.on('newGame', () => {
     if (!currentRoom || currentRoom.game.running) return;
-    // Reset chips
-    for (const p of currentRoom.game.players) {
+
+    const game = currentRoom.game;
+    const requestingPlayer = game.getPlayerBySocket(socket.id);
+
+    // If the requesting player is broke, reject silently (client should handle this)
+    if (requestingPlayer && !requestingPlayer.isAI && requestingPlayer.chips <= 0) {
+      socket.emit('needsRecharge', { reason: '积分不足，请充值后继续' });
+      return;
+    }
+
+    // Reset round state but KEEP human chips intact; only reset AI chips
+    for (const p of game.players) {
+      p.folded = false;
+      p.allIn = false;
+      if (p.isAI) {
+        // Replenish AI chips if they busted so the game can continue
+        if (p.chips <= 0) p.chips = 10000;
+      }
+      // Human chips are intentionally NOT reset here
+    }
+    game.roundNumber = 0;
+    game.smallBlind = 50;
+    game.bigBlind = 100;
+    currentRoom.startGame();
+  });
+
+  // Full game reset with fresh chips (used after recharge / first-time start)
+  socket.on('newGameFull', () => {
+    if (!currentRoom || currentRoom.game.running) return;
+    const game = currentRoom.game;
+    for (const p of game.players) {
       p.chips = 10000;
       p.folded = false;
       p.allIn = false;
     }
-    currentRoom.game.roundNumber = 0;
-    currentRoom.game.smallBlind = 50;
-    currentRoom.game.bigBlind = 100;
+    game.roundNumber = 0;
+    game.smallBlind = 50;
+    game.bigBlind = 100;
     currentRoom.startGame();
   });
 

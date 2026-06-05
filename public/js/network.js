@@ -56,6 +56,10 @@ const Network = {
     this.socket.emit('newGame');
   },
 
+  requestNewGameFull() {
+    this.socket.emit('newGameFull');
+  },
+
   // Setup game event listeners
   setupGameEvents() {
     const s = this.socket;
@@ -114,6 +118,10 @@ const Network = {
 
     s.on('gameOver', (data) => {
       App.onGameOver(data);
+    });
+
+    s.on('needsRecharge', (data) => {
+      App.onNeedsRecharge(data);
     });
   }
 };

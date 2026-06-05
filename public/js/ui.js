@@ -200,13 +200,18 @@ const UI = {
       const balance = Credits.getBalance();
       const isVIP = Credits.isVIP;
       let creditStatus = '';
+      let btnText = won ? '重新开始 Restart' : '';
+
       if (!won) {
         if (isVIP) {
           creditStatus = '<p class="credit-status vip">👑 VIP 积分无限 · Unlimited credits</p>';
+          btnText = '继续游戏 Continue';
         } else if (balance >= Credits.COST_PER_GAME) {
-          creditStatus = `<p class="credit-status sufficient">💰 积分余额: ${balance.toLocaleString()} (可开始新游戏)</p>`;
+          creditStatus = `<p class="credit-status sufficient">💰 积分余额: ${balance.toLocaleString()} · 可继续游戏</p>`;
+          btnText = '继续游戏 Continue';
         } else {
-          creditStatus = `<p class="credit-status insufficient">⚠️ 积分不足: ${balance.toLocaleString()} / 需要 ${Credits.COST_PER_GAME.toLocaleString()}</p>`;
+          creditStatus = `<p class="credit-status insufficient">⚠️ 积分不足，需充值才能继续<br><span style="font-size:0.8em;opacity:0.7">余额 ${balance.toLocaleString()} / 需要 ${Credits.COST_PER_GAME.toLocaleString()}</span></p>`;
+          btnText = '前往充值 Recharge';
         }
       }
 
@@ -214,7 +219,7 @@ const UI = {
         <h1>${won ? '🎉 恭喜! Congratulations!' : '💔 游戏结束 Game Over'}</h1>
         <p>${won ? `你赢得了 You won <strong>$${myChips.toLocaleString()}</strong>` : '你的筹码已用完 You ran out of chips'}</p>
         ${creditStatus}
-        <button class="restart-btn" id="restart-btn">重新开始 Restart</button>`;
+        <button class="restart-btn" id="restart-btn">${btnText}</button>`;
       document.body.appendChild(overlay);
       document.getElementById('restart-btn').addEventListener('click', () => {
         overlay.remove();

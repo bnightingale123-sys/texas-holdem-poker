@@ -286,8 +286,21 @@ const App = {
     const myChips = myPlayer ? myPlayer.chips : 0;
     if (myChips > 0) { Sound.win(); } else { Sound.lose(); }
     UI.showGameOver(myChips).then(() => {
-      // Only deduct credits if player lost all chips
       if (myChips <= 0) {
+        // Player lost all chips — MUST recharge, cannot restart for free
+        Credits.setPendingRestart(() => {
+          if (Credits.canAffordGame()) {
+            if (!Credits.spendForGame()) {
+              UI.showError('积分扣除失败 Deduction failed');
+              return;
+            }
+            // Use full reset since we're starting fresh after recharge
+            Network.requestNewGameFull();
+          }
+        });
+        Credits.openModal();
+      } else {
+        // Player still has chips — spend credits and continue
         if (Credits.canAffordGame()) {
           if (!Credits.spendForGame()) {
             UI.showError('积分扣除失败 Deduction failed');
@@ -295,7 +308,6 @@ const App = {
           }
           Network.requestNewGame();
         } else {
-          // Directly open recharge modal - no toast, no delay
           Credits.setPendingRestart(() => {
             if (Credits.canAffordGame()) {
               if (!Credits.spendForGame()) {
@@ -307,11 +319,23 @@ const App = {
           });
           Credits.openModal();
         }
-      } else {
-        // Player still has chips — free restart
-        Network.requestNewGame();
       }
     });
+  },
+
+  onNeedsRecharge(data) {
+    // Server rejected newGame because the requesting player has 0 chips
+    UI.showError(data.reason || '积分不足，请充值后继续 Please recharge to continue');
+    Credits.setPendingRestart(() => {
+      if (Credits.canAffordGame()) {
+        if (!Credits.spendForGame()) {
+          UI.showError('积分扣除失败 Deduction failed');
+          return;
+        }
+        Network.requestNewGameFull();
+      }
+    });
+    Credits.openModal();
   }
 };
 
