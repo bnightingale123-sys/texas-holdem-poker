@@ -6,6 +6,10 @@ const Network = {
   socket: null,
   connected: false,
 
+  getPlayerId() {
+    return App.loggedInUsername || null;
+  },
+
   init() {
     this.socket = io();
 
@@ -31,17 +35,34 @@ const Network = {
     if (label) label.textContent = connected ? '已连接' : '已断开';
   },
 
+  // Auth operations
+  register(username, password, cb) {
+    this.socket.emit('register', { username, password }, cb);
+  },
+
+  login(username, password, cb) {
+    this.socket.emit('login', { username, password }, cb);
+  },
+
+  autoLogin(username, token, cb) {
+    this.socket.emit('autoLogin', { username, token }, cb);
+  },
+
+  logout(username) {
+    this.socket.emit('logout', { username });
+  },
+
   // Room operations
   createRoom(playerName, cb) {
-    this.socket.emit('createRoom', { playerName }, cb);
+    this.socket.emit('createRoom', { playerName, playerId: this.getPlayerId() }, cb);
   },
 
   joinRoom(roomId, playerName, cb) {
-    this.socket.emit('joinRoom', { roomId, playerName }, cb);
+    this.socket.emit('joinRoom', { roomId, playerName, playerId: this.getPlayerId() }, cb);
   },
 
   quickMatch(playerName, cb) {
-    this.socket.emit('quickMatch', { playerName }, cb);
+    this.socket.emit('quickMatch', { playerName, playerId: this.getPlayerId() }, cb);
   },
 
   startGame() {

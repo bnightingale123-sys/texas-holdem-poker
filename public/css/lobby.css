@@ -37,7 +37,116 @@
   text-transform: uppercase;
 }
 
-/* Name Input */
+/* Auth Section */
+.auth-section {
+  margin-bottom: 28px;
+}
+
+.auth-input {
+  width: 100%;
+  padding: 11px 16px;
+  background: var(--bg-tertiary);
+  border: 2px solid rgba(255,255,255,0.08);
+  border-radius: var(--radius-lg);
+  color: var(--text-primary);
+  font-size: 0.95rem;
+  font-family: var(--font-body);
+  text-align: center;
+  transition: var(--transition-normal);
+  margin-bottom: 8px;
+  box-sizing: border-box;
+}
+
+.auth-input:focus {
+  border-color: var(--gold);
+  box-shadow: 0 0 12px var(--gold-glow);
+  outline: none;
+}
+
+.auth-input::placeholder {
+  color: var(--text-muted);
+}
+
+.auth-btn {
+  width: 100%;
+  padding: 12px 24px;
+  border-radius: var(--radius-lg);
+  font-weight: 700;
+  font-size: 0.95rem;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  transition: var(--transition-fast);
+  background: linear-gradient(135deg, var(--gold-dark), var(--gold), var(--gold-light));
+  color: #000;
+  box-shadow: 0 4px 15px var(--gold-glow);
+  cursor: pointer;
+  margin-bottom: 4px;
+}
+
+.auth-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px var(--gold-glow);
+}
+
+.auth-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.auth-error {
+  color: var(--danger);
+  font-size: 0.78rem;
+  min-height: 1.2em;
+  margin: 2px 0;
+}
+
+.auth-switch {
+  display: inline-block;
+  color: var(--gold-light);
+  font-size: 0.78rem;
+  cursor: pointer;
+  margin-top: 6px;
+  opacity: 0.7;
+  transition: var(--transition-fast);
+}
+
+.auth-switch:hover {
+  opacity: 1;
+}
+
+.logged-in-info {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.logged-in-icon {
+  font-size: 1.3rem;
+}
+
+.logged-in-username {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--gold-light);
+}
+
+.logout-btn {
+  background: rgba(255,255,255,0.08) !important;
+  color: var(--text-secondary) !important;
+  box-shadow: none !important;
+  font-size: 0.8rem !important;
+  padding: 8px 16px !important;
+}
+
+.logout-btn:hover {
+  background: rgba(255,255,255,0.14) !important;
+  color: var(--text-primary) !important;
+}
+
+/* Name Input (legacy, kept for compat) */
 .name-section {
   margin-bottom: 28px;
 }

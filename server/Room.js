@@ -20,13 +20,13 @@ class Room {
     return this.game.players.length >= this.maxPlayers;
   }
 
-  addSocket(socket, playerName) {
+  addSocket(socket, playerName, playerId) {
     if (this.game.running) return { ok: false, reason: '游戏进行中，无法加入' };
     if (this.game.players.length >= this.maxPlayers) return { ok: false, reason: '房间已满' };
 
     this.sockets.set(socket.id, socket);
     socket.join(this.id);
-    this.game.addPlayer(socket.id, playerName, socket.id);
+    this.game.addPlayer(playerId || socket.id, playerName, socket.id);
 
     // Notify everyone
     this.broadcast('playerJoined', {

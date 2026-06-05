@@ -30,10 +30,19 @@ class Game {
     this.resolvePlayerAction = null;
   }
 
+  saveProgress() {
+    localStorage.setItem('playerChips', this.players[0].chips.toString());
+  }
+
+  loadProgress() {
+    const saved = localStorage.getItem('playerChips');
+    return saved && parseInt(saved) > 0 ? parseInt(saved) : null;
+  }
+
   init(startingChips) {
     this.needsRecharge = false;
     localStorage.removeItem('needsRecharge');
-    const chips = startingChips !== undefined ? startingChips : 10000;
+    const chips = startingChips !== undefined ? startingChips : (this.loadProgress() || 10000);
     // Player 0 = human, 1-3 = AI
     this.players = [
       { name: '你', chips: chips, holeCards: [], bet: 0, totalBet: 0, folded: false, isHuman: true, isDealer: false, isActive: false, allIn: false, ai: null },
@@ -407,25 +416,22 @@ class Game {
     // Show result modal
     await UI.showRoundResult({ winners: mergedWinners });
 
+    // Save progress so refresh doesn't reset chips
+    this.saveProgress();
+
     // Check game over
     const alivePlayers = this.players.filter(p => p.chips > 0);
     if (this.players[0].chips <= 0 || alivePlayers.length <= 1) {
       const playerChips = this.players[0].chips;
 
       if (playerChips <= 0) {
-        // Player out of chips → flag and show recharge page
+        // Player out of chips — show game over with $0, flag for recharge
         this.needsRecharge = true;
         localStorage.setItem('needsRecharge', 'true');
-        const rechargeAmount = await UI.showRechargeModal();
-
-        if (rechargeAmount > 0) {
-          // Recharge successful — start a fresh game with purchased chips
-          this.init(rechargeAmount);
-          await UI.showMessage(`充值成功！获得 $${rechargeAmount.toLocaleString()} 筹码`, 2500);
-          this.startRound();
-        }
-        // If user cancelled the recharge modal, nothing happens — the modal just closes.
-        // The recharge modal has no cancel button when chips=0, forcing recharge to continue.
+        await UI.showGameOver(playerChips);
+        document.getElementById('game-screen').classList.add('hidden');
+        document.getElementById('start-screen').classList.remove('hidden');
+        document.getElementById('start-btn').textContent = '充值继续游戏';
         return;
       }
 

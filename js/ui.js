@@ -248,6 +248,7 @@ const UI = {
       overlay.innerHTML = `
         <h1>${won ? '🎉 恭喜你!' : '💔 游戏结束'}</h1>
         <p>${won ? `你赢得了 $${playerChips.toLocaleString()}` : '你的筹码已用完'}</p>
+        <p class="final-chips" style="font-size:1.2rem; opacity:0.7;">最终余额: $${playerChips.toLocaleString()}</p>
         <button class="restart-btn" id="restart-btn">${won ? '重新开始' : '返回'}</button>
       `;
       document.body.appendChild(overlay);

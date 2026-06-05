@@ -4,6 +4,7 @@
 const { Deck } = require('./deck');
 const { evaluateHand, compareHandResult } = require('./hand');
 const { AIPlayer } = require('./ai');
+const { getPlayer, updatePlayer } = require('./persistence');
 
 class ServerGame {
   constructor(room) {
@@ -27,10 +28,13 @@ class ServerGame {
     this.running = false;
   }
 
-  addPlayer(id, name, socketId) {
+  addPlayer(pid, name, socketId) {
     if (this.players.length >= 4) return false;
+    // Load chips from persistent database
+    const saved = getPlayer(pid);
+    const chips = (saved && saved.chips > 0) ? saved.chips : 10000;
     this.players.push({
-      id, name, chips: 10000, holeCards: [], bet: 0, totalBet: 0,
+      pid, id: pid, name, chips, holeCards: [], bet: 0, totalBet: 0,
       folded: false, allIn: false, isAI: false, ai: null, socketId
     });
     return true;
@@ -304,6 +308,11 @@ class ServerGame {
       index: idx, name: p.name, action: actionLabel, amount: actionAmount,
       bet: p.bet, players: this.getPublicPlayers(), pot: this.pot
     });
+
+    // Live-save after every action
+    if (!p.isAI && p.pid) {
+      updatePlayer(p.pid, { chips: p.chips, name: p.name });
+    }
   }
 
   resetBets() {
@@ -372,6 +381,9 @@ class ServerGame {
         mergedWinners.push({ ...w, amount: totalAmount });
       }
     }
+
+    // Persist chips for all human players
+    this.saveHumanPlayers();
 
     this.broadcast('roundEnd', { winners: mergedWinners, players: this.getPublicPlayers() });
 
@@ -449,6 +461,15 @@ class ServerGame {
       isActive: i === this.activeIndex,
       hasCards: p.holeCards.length > 0
     }));
+  }
+
+  // Save all human players' chips to persistent database
+  saveHumanPlayers() {
+    for (const p of this.players) {
+      if (!p.isAI && p.pid) {
+        updatePlayer(p.pid, { chips: p.chips, name: p.name });
+      }
+    }
   }
 
   sleep(ms) { return new Promise(r => setTimeout(r, ms)); }

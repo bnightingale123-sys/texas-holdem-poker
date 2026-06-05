@@ -6,6 +6,8 @@ const http = require('http');
 const { Server } = require('socket.io');
 const path = require('path');
 const { RoomManager } = require('./server/Room');
+const { updatePlayer } = require('./server/persistence');
+const { register, login, verifyToken, logout } = require('./server/auth');
 
 const app = express();
 const server = http.createServer(app);
@@ -24,16 +26,37 @@ io.on('connection', (socket) => {
   console.log(`Player connected: ${socket.id}`);
   let currentRoom = null;
 
-  // Get room list
+  // ---- Auth Events ----
+
+  socket.on('register', ({ username, password }, cb) => {
+    const result = register(username, password);
+    if (typeof cb === 'function') cb(result);
+  });
+
+  socket.on('login', ({ username, password }, cb) => {
+    const result = login(username, password);
+    if (typeof cb === 'function') cb(result);
+  });
+
+  socket.on('autoLogin', ({ username, token }, cb) => {
+    const ok = verifyToken(username, token);
+    if (typeof cb === 'function') cb({ ok });
+  });
+
+  socket.on('logout', ({ username }) => {
+    logout(username);
+  });
+
+  // ---- Room Events ----
   socket.on('getRooms', (cb) => {
     if (typeof cb === 'function') cb(roomManager.getRoomList());
   });
 
   // Create room
-  socket.on('createRoom', ({ playerName }, cb) => {
+  socket.on('createRoom', ({ playerName, playerId }, cb) => {
     if (currentRoom) { currentRoom.removeSocket(socket.id); }
     const room = roomManager.createRoom();
-    const result = room.addSocket(socket, playerName || '玩家');
+    const result = room.addSocket(socket, playerName || '玩家', playerId);
     if (result.ok) {
       currentRoom = room;
       if (typeof cb === 'function') cb({ ok: true, roomId: room.id });
@@ -43,14 +66,14 @@ io.on('connection', (socket) => {
   });
 
   // Join room
-  socket.on('joinRoom', ({ roomId, playerName }, cb) => {
+  socket.on('joinRoom', ({ roomId, playerName, playerId }, cb) => {
     if (currentRoom) { currentRoom.removeSocket(socket.id); }
     const room = roomManager.getRoom(roomId);
     if (!room) {
       if (typeof cb === 'function') cb({ ok: false, reason: '房间不存在' });
       return;
     }
-    const result = room.addSocket(socket, playerName || '玩家');
+    const result = room.addSocket(socket, playerName || '玩家', playerId);
     if (result.ok) {
       currentRoom = room;
       if (typeof cb === 'function') cb({ ok: true, roomId: room.id, players: room.game.getPublicPlayers() });
@@ -60,10 +83,10 @@ io.on('connection', (socket) => {
   });
 
   // Quick match
-  socket.on('quickMatch', ({ playerName }, cb) => {
+  socket.on('quickMatch', ({ playerName, playerId }, cb) => {
     if (currentRoom) { currentRoom.removeSocket(socket.id); }
     const room = roomManager.quickMatch();
-    const result = room.addSocket(socket, playerName || '玩家');
+    const result = room.addSocket(socket, playerName || '玩家', playerId);
     if (result.ok) {
       currentRoom = room;
       if (typeof cb === 'function') cb({ ok: true, roomId: room.id, players: room.game.getPublicPlayers() });
@@ -114,6 +137,7 @@ io.on('connection', (socket) => {
     game.roundNumber = 0;
     game.smallBlind = 50;
     game.bigBlind = 100;
+    game.saveHumanPlayers();
     currentRoom.startGame();
   });
 
@@ -129,6 +153,7 @@ io.on('connection', (socket) => {
     game.roundNumber = 0;
     game.smallBlind = 50;
     game.bigBlind = 100;
+    game.saveHumanPlayers();
     currentRoom.startGame();
   });
 
@@ -163,6 +188,8 @@ io.on('connection', (socket) => {
   socket.on('disconnect', () => {
     console.log(`Player disconnected: ${socket.id}`);
     if (currentRoom) {
+      // Save human player chips before removing
+      currentRoom.game.saveHumanPlayers();
       currentRoom.removeSocket(socket.id);
       if (currentRoom.isEmpty()) {
         roomManager.deleteRoom(currentRoom.id);

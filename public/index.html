@@ -29,11 +29,38 @@
       <h1 class="lobby-logo">TEXAS HOLD'EM</h1>
       <p class="lobby-subtitle">德 州 扑 克 · 在 线 对 战 · Online Multiplayer</p>
 
-      <div class="name-section">
-        <input type="text" class="name-input" id="player-name-input" placeholder="输入昵称 / Enter Nickname" maxlength="12">
+      <div class="auth-section" id="auth-section">
+
+        <!-- Login form -->
+        <div id="login-section">
+          <input type="text" class="auth-input" id="login-username" placeholder="用户名 Username" maxlength="16" autocomplete="username">
+          <input type="password" class="auth-input" id="login-password" placeholder="密码 Password" maxlength="32" autocomplete="current-password">
+          <button class="auth-btn" id="btn-login">登录 Login</button>
+          <div class="auth-error" id="login-error"></div>
+          <span class="auth-switch" id="show-register">没有账号？注册 Register</span>
+        </div>
+
+        <!-- Register form (hidden) -->
+        <div id="register-section" class="hidden">
+          <input type="text" class="auth-input" id="register-username" placeholder="用户名 Username" maxlength="16" autocomplete="off">
+          <input type="password" class="auth-input" id="register-password" placeholder="密码 Password" maxlength="32" autocomplete="new-password">
+          <input type="password" class="auth-input" id="register-confirm" placeholder="确认密码 Confirm" maxlength="32" autocomplete="new-password">
+          <button class="auth-btn" id="btn-register">注册 Register</button>
+          <div class="auth-error" id="register-error"></div>
+          <span class="auth-switch" id="show-login">已有账号？登录 Login</span>
+        </div>
+
+        <!-- Logged-in state (hidden) -->
+        <div id="logged-in-section" class="hidden">
+          <div class="logged-in-info">
+            <span class="logged-in-icon">👤</span>
+            <span class="logged-in-username" id="logged-in-username"></span>
+          </div>
+          <button class="auth-btn logout-btn" id="btn-logout">退出 Logout</button>
+        </div>
       </div>
 
-      <div class="lobby-actions">
+      <div class="lobby-actions hidden" id="lobby-actions">
         <button class="lobby-btn primary" id="btn-quick-match">
           <span class="btn-icon">⚡</span> 快速匹配 <span style="font-size:0.75em;opacity:0.75">Quick Match</span>
         </button>
