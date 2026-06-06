@@ -184,20 +184,13 @@ const App = {
         Credits.openModal();
         return;
       }
-      if (!Credits.spendForGame()) {
-        UI.showError('积分扣除失败 Deduction failed');
-        return;
-      }
       const name = this.getPlayerName();
       Network.quickMatch(name, (res) => {
         if (res.ok) {
           this.roomId = res.roomId;
           this.isOwner = (res.players.length === 1);
           this.showWaitingRoom(res.roomId, res.players);
-        } else {
-          Credits.addCredits(Credits.COST_PER_GAME);
-          UI.showError(res.reason || '匹配失败');
-        }
+        } else { UI.showError(res.reason || '匹配失败'); }
       });
     });
 
@@ -205,10 +198,6 @@ const App = {
       Sound.click();
       if (!Credits.canAffordGame()) {
         Credits.openModal();
-        return;
-      }
-      if (!Credits.spendForGame()) {
-        UI.showError('积分扣除失败 Deduction failed');
         return;
       }
       const name = this.getPlayerName();
@@ -230,32 +219,17 @@ const App = {
         Credits.openModal();
         return;
       }
-      if (!Credits.spendForGame()) {
-        UI.showError('积分扣除失败 Deduction failed');
-        return;
-      }
       Network.joinRoom(code, name, (res) => {
         if (res.ok) {
           this.roomId = res.roomId;
           this.isOwner = false;
           this.showWaitingRoom(res.roomId, res.players);
-        } else {
-          Credits.addCredits(Credits.COST_PER_GAME);
-          UI.showError(res.reason || '加入失败');
-        }
+        } else { UI.showError(res.reason || '加入失败'); }
       });
     });
 
     document.getElementById('btn-start-game').addEventListener('click', () => {
       Sound.click();
-      if (!Credits.canAffordGame()) {
-        Credits.openModal();
-        return;
-      }
-      if (!Credits.spendForGame()) {
-        UI.showError('积分扣除失败 Deduction failed');
-        return;
-      }
       Network.startGame();
     });
   },
@@ -331,6 +305,10 @@ const App = {
   onRoundStart(data) {
     this.showGameScreen();
     this.myIndex = -1;
+    // Deduct credits when a new game session starts (round 1 only)
+    if (data.round === 1 && !Credits.isVIP) {
+      Credits.spendForGame();
+    }
     Sound.roundStart();
     UI.clearTable();
     data.players.forEach((p, i) => {
@@ -454,33 +432,33 @@ const App = {
     if (myChips > 0) { Sound.win(); } else { Sound.lose(); }
     UI.showGameOver(myChips).then(() => {
       if (myChips <= 0) {
-        // Player lost all chips — need more credits for a new game session
+        // Player lost all chips — need credits for a new game
         Credits.setPendingRestart(() => {
           if (Credits.canAffordGame()) {
-            if (!Credits.spendForGame()) {
-              UI.showError('积分扣除失败 Deduction failed');
-              return;
-            }
             Network.requestNewGameFull();
           }
         });
         Credits.openModal();
       } else {
-        // Player still has chips — continue for free within this session
-        Network.requestNewGame();
+        // Player still has chips — need credits for next game
+        if (Credits.canAffordGame()) {
+          Network.requestNewGame();
+        } else {
+          Credits.setPendingRestart(() => {
+            if (Credits.canAffordGame()) {
+              Network.requestNewGame();
+            }
+          });
+          Credits.openModal();
+        }
       }
     });
   },
 
   onNeedsRecharge(data) {
-    // Server rejected newGame because the requesting player has 0 chips
     UI.showError(data.reason || '积分不足，请充值后继续 Please recharge to continue');
     Credits.setPendingRestart(() => {
       if (Credits.canAffordGame()) {
-        if (!Credits.spendForGame()) {
-          UI.showError('积分扣除失败 Deduction failed');
-          return;
-        }
         Network.requestNewGameFull();
       }
     });
