@@ -42,7 +42,7 @@ class Game {
   init(startingChips) {
     this.needsRecharge = false;
     localStorage.removeItem('needsRecharge');
-    const chips = startingChips !== undefined ? startingChips : (this.loadProgress() || 10000);
+    const chips = startingChips !== undefined ? startingChips : (this.loadProgress() ?? 10000);
     // Player 0 = human, 1-3 = AI
     this.players = [
       { name: '你', chips: chips, holeCards: [], bet: 0, totalBet: 0, folded: false, isHuman: true, isDealer: false, isActive: false, allIn: false, ai: null },
