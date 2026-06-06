@@ -36,7 +36,7 @@ class Game {
 
   loadProgress() {
     const saved = localStorage.getItem('playerChips');
-    return saved && parseInt(saved) > 0 ? parseInt(saved) : null;
+    return saved !== null ? parseInt(saved) : null;
   }
 
   init(startingChips) {
