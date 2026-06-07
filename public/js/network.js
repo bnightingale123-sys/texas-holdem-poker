@@ -73,6 +73,15 @@ const Network = {
     this.socket.emit('action', decision);
   },
 
+  // Balance & daily claim (unified server-side)
+  fetchBalance(cb) {
+    this.socket.emit('getBalance', cb);
+  },
+
+  claimDaily(cb) {
+    this.socket.emit('claimDaily', cb);
+  },
+
   requestNewGame() {
     this.socket.emit('newGame');
   },

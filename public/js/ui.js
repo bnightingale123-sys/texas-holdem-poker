@@ -196,30 +196,11 @@ const UI = {
       overlay.className = 'game-over-overlay';
       const won = myChips > 0;
 
-      // Show credit status
-      const balance = Credits.getBalance();
-      const isVIP = Credits.isVIP;
-      let creditStatus = '';
-      let btnText = won ? '重新开始 Restart' : '';
-
-      if (!won) {
-        if (isVIP) {
-          creditStatus = '<p class="credit-status vip">👑 VIP 积分无限 · Unlimited credits</p>';
-          btnText = '继续游戏 Continue';
-        } else if (balance >= Credits.COST_PER_GAME) {
-          creditStatus = `<p class="credit-status sufficient">💰 积分余额: ${balance.toLocaleString()} · 可继续游戏</p>`;
-          btnText = '继续游戏 Continue';
-        } else {
-          creditStatus = `<p class="credit-status insufficient">⚠️ 积分不足，需充值才能继续<br><span style="font-size:0.8em;opacity:0.7">余额 ${balance.toLocaleString()} / 需要 ${Credits.COST_PER_GAME.toLocaleString()}</span></p>`;
-          btnText = '前往充值 Recharge';
-        }
-      }
-
       overlay.innerHTML = `
         <h1>${won ? '🎉 恭喜! Congratulations!' : '💔 游戏结束 Game Over'}</h1>
         <p>${won ? `你赢得了 You won <strong>$${myChips.toLocaleString()}</strong>` : '你的筹码已用完 You ran out of chips'}</p>
-        ${creditStatus}
-        <button class="restart-btn" id="restart-btn">${btnText}</button>`;
+        ${won ? '<button class="restart-btn" id="restart-btn">继续下一局 Next Game</button>'
+              : '<p style="color:var(--warning);font-size:0.85rem;">请领取每日积分或充值后继续<br>Claim daily credits or recharge to continue</p><button class="restart-btn" id="restart-btn">领取积分 Claim Credits</button>'}`;
       document.body.appendChild(overlay);
       document.getElementById('restart-btn').addEventListener('click', () => {
         overlay.remove();

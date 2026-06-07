@@ -32,7 +32,8 @@ class ServerGame {
     if (this.players.length >= 4) return false;
     // Load chips from persistent database
     const saved = getPlayer(pid);
-    const chips = (saved && saved.chips !== undefined && saved.chips !== null) ? saved.chips : 10000;
+    // Unified balance: 0 if not yet saved (must claim daily or recharge first)
+    const chips = (saved && saved.chips !== undefined && saved.chips !== null) ? saved.chips : 0;
     this.players.push({
       pid, id: pid, name, chips, holeCards: [], bet: 0, totalBet: 0,
       folded: false, allIn: false, isAI: false, ai: null, socketId

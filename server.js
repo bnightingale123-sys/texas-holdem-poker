@@ -6,7 +6,7 @@ const http = require('http');
 const { Server } = require('socket.io');
 const path = require('path');
 const { RoomManager } = require('./server/Room');
-const { updatePlayer } = require('./server/persistence');
+const { getPlayer, updatePlayer } = require('./server/persistence');
 const { register, login, verifyToken, logout } = require('./server/auth');
 
 const app = express();
@@ -35,11 +35,13 @@ io.on('connection', (socket) => {
 
   socket.on('login', ({ username, password }, cb) => {
     const result = login(username, password);
+    if (result.ok) socket.playerId = username;
     if (typeof cb === 'function') cb(result);
   });
 
   socket.on('autoLogin', ({ username, token }, cb) => {
     const ok = verifyToken(username, token);
+    if (ok) socket.playerId = username;
     if (typeof cb === 'function') cb({ ok });
   });
 
@@ -55,6 +57,16 @@ io.on('connection', (socket) => {
   // Create room
   socket.on('createRoom', ({ playerName, playerId }, cb) => {
     if (currentRoom) { currentRoom.removeSocket(socket.id); }
+    // Block players with 0 chips
+    const pid = playerId || socket.playerId;
+    if (pid) {
+      const playerData = getPlayer(pid);
+      const chips = (playerData && playerData.chips !== null && playerData.chips !== undefined) ? playerData.chips : 0;
+      if (chips <= 0) {
+        if (typeof cb === 'function') cb({ ok: false, reason: '积分不足，请先领取每日积分或充值' });
+        return;
+      }
+    }
     const room = roomManager.createRoom();
     const result = room.addSocket(socket, playerName || '玩家', playerId);
     if (result.ok) {
@@ -68,6 +80,16 @@ io.on('connection', (socket) => {
   // Join room
   socket.on('joinRoom', ({ roomId, playerName, playerId }, cb) => {
     if (currentRoom) { currentRoom.removeSocket(socket.id); }
+    // Block players with 0 chips
+    const pid = playerId || socket.playerId;
+    if (pid) {
+      const playerData = getPlayer(pid);
+      const chips = (playerData && playerData.chips !== null && playerData.chips !== undefined) ? playerData.chips : 0;
+      if (chips <= 0) {
+        if (typeof cb === 'function') cb({ ok: false, reason: '积分不足，请先领取每日积分或充值' });
+        return;
+      }
+    }
     const room = roomManager.getRoom(roomId);
     if (!room) {
       if (typeof cb === 'function') cb({ ok: false, reason: '房间不存在' });
@@ -85,6 +107,16 @@ io.on('connection', (socket) => {
   // Quick match
   socket.on('quickMatch', ({ playerName, playerId }, cb) => {
     if (currentRoom) { currentRoom.removeSocket(socket.id); }
+    // Block players with 0 chips
+    const pid = playerId || socket.playerId;
+    if (pid) {
+      const playerData = getPlayer(pid);
+      const chips = (playerData && playerData.chips !== null && playerData.chips !== undefined) ? playerData.chips : 0;
+      if (chips <= 0) {
+        if (typeof cb === 'function') cb({ ok: false, reason: '积分不足，请先领取每日积分或充值' });
+        return;
+      }
+    }
     const room = roomManager.quickMatch();
     const result = room.addSocket(socket, playerName || '玩家', playerId);
     if (result.ok) {
@@ -111,17 +143,24 @@ io.on('connection', (socket) => {
     currentRoom.game.handleAction(socket.id, decision);
   });
 
-  // Request new round (after game over) — preserve human chip counts
+  // Request new round (after game over)
   socket.on('newGame', () => {
     if (!currentRoom || currentRoom.game.running) return;
 
     const game = currentRoom.game;
     const requestingPlayer = game.getPlayerBySocket(socket.id);
 
-    // If the requesting player is broke, reject silently (client should handle this)
-    if (requestingPlayer && !requestingPlayer.isAI && requestingPlayer.chips <= 0) {
-      socket.emit('needsRecharge', { reason: '积分不足，请充值后继续' });
-      return;
+    // Check persisted balance (may differ from in-game chips after daily claim or recharge)
+    if (requestingPlayer && !requestingPlayer.isAI) {
+      const pid = socket.playerId || requestingPlayer.pid;
+      const saved = pid ? getPlayer(pid) : null;
+      const persistedChips = (saved && saved.chips !== null && saved.chips !== undefined) ? saved.chips : 0;
+      if (persistedChips <= 0) {
+        socket.emit('needsRecharge', { reason: '积分不足，请领取每日积分或充值后继续' });
+        return;
+      }
+      // Reload chips from persistence (e.g. after daily claim)
+      requestingPlayer.chips = persistedChips;
     }
 
     // Reset round state but KEEP human chips intact; only reset AI chips
@@ -182,6 +221,36 @@ io.on('connection', (socket) => {
         expiresAt
       });
     }
+  });
+
+  // ---- Balance & Daily Claim (unified server-side) ----
+
+  socket.on('getBalance', (cb) => {
+    const pid = socket.playerId;
+    if (!pid) { if (typeof cb === 'function') cb({ balance: 0 }); return; }
+    const player = getPlayer(pid);
+    const chips = (player && player.chips !== null && player.chips !== undefined) ? player.chips : 0;
+    if (typeof cb === 'function') cb({ balance: chips });
+  });
+
+  socket.on('claimDaily', (cb) => {
+    const pid = socket.playerId;
+    if (!pid) { if (typeof cb === 'function') cb({ ok: false }); return; }
+
+    const player = getPlayer(pid);
+    const lastClaim = player ? player.dailyClaimDate : null;
+    const today = new Date().toDateString();
+
+    if (lastClaim && new Date(lastClaim).toDateString() === today) {
+      if (typeof cb === 'function') cb({ ok: false, reason: '今日已领取' });
+      return;
+    }
+
+    const currentChips = (player && player.chips !== null && player.chips !== undefined) ? player.chips : 0;
+    const newChips = currentChips + 10000;
+    updatePlayer(pid, { chips: newChips, dailyClaimDate: Date.now() });
+
+    if (typeof cb === 'function') cb({ ok: true, balance: newChips });
   });
 
   // Disconnect

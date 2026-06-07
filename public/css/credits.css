@@ -622,6 +622,72 @@
   font-size: 0.8rem;
 }
 
+/* ---- Modal Daily Claim Card ---- */
+.modal-daily-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px;
+  margin-bottom: 20px;
+  background: linear-gradient(135deg, rgba(46,204,113,0.08), rgba(39,174,96,0.04));
+  border: 1px solid rgba(46,204,113,0.25);
+  border-radius: var(--radius-lg);
+  animation: fadeIn 0.4s ease;
+}
+
+.modal-daily-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.modal-daily-icon {
+  font-size: 1.6rem;
+  animation: pulse 2s ease infinite;
+}
+
+.modal-daily-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.modal-daily-title {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.modal-daily-amount {
+  font-size: 0.72rem;
+  color: var(--success);
+  font-weight: 600;
+}
+
+.modal-daily-btn {
+  padding: 8px 18px;
+  background: linear-gradient(135deg, #2ecc71, #27ae60);
+  color: #fff;
+  border-radius: var(--radius-full);
+  font-size: 0.78rem;
+  font-weight: 700;
+  white-space: nowrap;
+  transition: var(--transition-fast);
+  cursor: pointer;
+  border: none;
+}
+
+.modal-daily-btn:hover:not(.claimed) {
+  transform: translateY(-1px);
+  box-shadow: 0 3px 12px rgba(46,204,113,0.4);
+}
+
+.modal-daily-btn.claimed {
+  background: linear-gradient(135deg, #555, #444);
+  cursor: default;
+  opacity: 0.6;
+}
+
 /* ---- Credits Toast ---- */
 .credits-toast {
   position: fixed;
@@ -696,6 +762,22 @@
   /* Modal: taller on tablet */
   .credits-modal-content {
     padding: 28px 22px;
+  }
+
+  /* Modal daily card: stack on tablet */
+  .modal-daily-card {
+    flex-direction: column;
+    gap: 10px;
+    text-align: center;
+  }
+
+  .modal-daily-left {
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .modal-daily-btn {
+    width: 100%;
   }
 
   /* Toast at bottom on mobile (avoids keyboard/notch) */

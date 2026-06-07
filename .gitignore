@@ -2,3 +2,4 @@ node_modules
 .git
 *.md
 data/
+server.log

@@ -36,6 +36,7 @@ const App = {
         if (res.ok) {
           this.loggedInUsername = username;
           this.showLobbyLoggedIn();
+          Credits.loadServerCredits();
         } else {
           // Token expired or invalid — clear and show login
           localStorage.removeItem('poker_username');
@@ -67,6 +68,7 @@ const App = {
           localStorage.setItem('poker_username', username);
           localStorage.setItem('poker_token', res.token);
           this.showLobbyLoggedIn();
+          Credits.loadServerCredits();
         } else {
           document.getElementById('login-error').textContent = res.reason || '登录失败';
         }
@@ -180,10 +182,6 @@ const App = {
   setupLobbyEvents() {
     document.getElementById('btn-quick-match').addEventListener('click', () => {
       Sound.click();
-      if (!Credits.canAffordGame()) {
-        Credits.openModal();
-        return;
-      }
       const name = this.getPlayerName();
       Network.quickMatch(name, (res) => {
         if (res.ok) {
@@ -196,10 +194,6 @@ const App = {
 
     document.getElementById('btn-create-room').addEventListener('click', () => {
       Sound.click();
-      if (!Credits.canAffordGame()) {
-        Credits.openModal();
-        return;
-      }
       const name = this.getPlayerName();
       Network.createRoom(name, (res) => {
         if (res.ok) {
@@ -215,10 +209,6 @@ const App = {
       const name = this.getPlayerName();
       const code = document.getElementById('room-code-input').value.trim().toUpperCase();
       if (!code) { UI.showError('请输入房间号'); return; }
-      if (!Credits.canAffordGame()) {
-        Credits.openModal();
-        return;
-      }
       Network.joinRoom(code, name, (res) => {
         if (res.ok) {
           this.roomId = res.roomId;
@@ -305,10 +295,6 @@ const App = {
   onRoundStart(data) {
     this.showGameScreen();
     this.myIndex = -1;
-    // Deduct credits when a new game session starts (round 1 only)
-    if (data.round === 1 && !Credits.isVIP) {
-      Credits.spendForGame();
-    }
     Sound.roundStart();
     UI.clearTable();
     data.players.forEach((p, i) => {
@@ -429,40 +415,24 @@ const App = {
   onGameOver(data) {
     const myPlayer = this.myIndex >= 0 ? data.players[this.myIndex] : null;
     const myChips = myPlayer ? myPlayer.chips : 0;
+
     if (myChips > 0) { Sound.win(); } else { Sound.lose(); }
     UI.showGameOver(myChips).then(() => {
       if (myChips <= 0) {
-        // Player lost all chips — need credits for a new game
-        Credits.setPendingRestart(() => {
-          if (Credits.canAffordGame()) {
-            Network.requestNewGameFull();
-          }
-        });
-        Credits.openModal();
-      } else {
-        // Player still has chips — need credits for next game
-        if (Credits.canAffordGame()) {
+        // Open credits modal — auto-restart after claiming daily
+        Credits.openModal(() => {
           Network.requestNewGame();
-        } else {
-          Credits.setPendingRestart(() => {
-            if (Credits.canAffordGame()) {
-              Network.requestNewGame();
-            }
-          });
-          Credits.openModal();
-        }
+        });
+      } else {
+        Network.requestNewGame();
       }
     });
   },
 
   onNeedsRecharge(data) {
-    UI.showError(data.reason || '积分不足，请充值后继续 Please recharge to continue');
-    Credits.setPendingRestart(() => {
-      if (Credits.canAffordGame()) {
-        Network.requestNewGameFull();
-      }
-    });
-    Credits.openModal();
+    UI.showError(data.reason || '积分不足，请先领取每日积分或充值');
+    // Open credits modal so player can claim daily or recharge
+    setTimeout(() => Credits.openModal(), 1500);
   }
 };
 
